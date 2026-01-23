@@ -28,6 +28,7 @@ import { Switch } from "@/components/ui/switch";
 import { CreatableCombobox } from "@/components/ui/creatable-combobox";
 import { ResponsiveModal } from "@/components/ui/responsive-modal";
 import AISubscriptionsList from "@/components/ai-subscriptions/AISubscriptionsList";
+import { useMasterList } from "@/hooks/useMasterList";
 
 function uniqCaseInsensitive(values: string[]) {
   const seen = new Set<string>();
@@ -78,15 +79,18 @@ export default function AISubscriptionsPage() {
   const del = useDeleteAISubscription();
   const vault = vaultQ.data?.items ?? [];
 
+  const platforms = useMasterList("nbk.master.platforms", CORE_PLATFORMS);
+  const tools = useMasterList("nbk.master.aiTools", []);
+
   const platformOptions = React.useMemo(() => {
     const existing = (q.data?.items ?? []).map((s) => (s.platform === "Other" ? s.platformOther : s.platform) ?? "");
-    return uniqCaseInsensitive([...CORE_PLATFORMS, ...existing]).sort((a, b) => a.localeCompare(b));
-  }, [q.data?.items]);
+    return uniqCaseInsensitive([...platforms.items, ...existing]).sort((a, b) => a.localeCompare(b));
+  }, [platforms.items, q.data?.items]);
 
   const toolOptions = React.useMemo(() => {
     const existing = (q.data?.items ?? []).map((s) => s.toolName);
-    return uniqCaseInsensitive(existing).sort((a, b) => a.localeCompare(b));
-  }, [q.data?.items]);
+    return uniqCaseInsensitive([...tools.items, ...existing]).sort((a, b) => a.localeCompare(b));
+  }, [tools.items, q.data?.items]);
 
   const [open, setOpen] = React.useState(false);
 
@@ -207,10 +211,12 @@ export default function AISubscriptionsPage() {
                         <CreatableCombobox
                           value={field.value}
                           onChange={field.onChange}
+                          onCreate={(v) => tools.addItem(v)}
                           options={toolOptions}
                           placeholder="Type a tool name…"
                           searchPlaceholder="Search tool history…"
                           addLabel={(v) => `+ Add tool: ${v}`}
+                          className="min-h-11"
                         />
                       </FormControl>
                       <FormMessage />
@@ -254,10 +260,12 @@ export default function AISubscriptionsPage() {
                         <CreatableCombobox
                           value={field.value}
                           onChange={field.onChange}
+                          onCreate={(v) => platforms.addItem(v)}
                           options={platformOptions}
                           placeholder="Select or type a platform…"
                           searchPlaceholder="Search platform…"
                           addLabel={(v) => `+ Add platform: ${v}`}
+                          className="min-h-11"
                         />
                       </FormControl>
                       <FormMessage />

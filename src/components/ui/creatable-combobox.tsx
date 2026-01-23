@@ -10,6 +10,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 export function CreatableCombobox({
   value,
   onChange,
+  onCreate,
   options,
   placeholder,
   searchPlaceholder,
@@ -18,6 +19,7 @@ export function CreatableCombobox({
 }: {
   value: string;
   onChange: (value: string) => void;
+  onCreate?: (value: string) => void;
   options: string[];
   placeholder: string;
   searchPlaceholder: string;
@@ -68,6 +70,7 @@ export function CreatableCombobox({
                   value={`+ Add ${normalizedQuery}`}
                   onSelect={() => {
                     onChange(normalizedQuery);
+                    onCreate?.(normalizedQuery);
                     setOpen(false);
                     setQuery("");
                   }}

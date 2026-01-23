@@ -3,14 +3,11 @@ import { Link2, PlugZap } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
   DialogDescription,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 
 import ExternalApiSettingsPanel from "@/components/api/ExternalApiSettingsPanel";
+import { ResponsiveModal } from "@/components/ui/responsive-modal";
 
 function readLS(key: string, fallback = "") {
   if (typeof window === "undefined") return fallback;
@@ -41,28 +38,30 @@ export default function ExternalApiSettings() {
         <span className="text-muted-foreground">({effectiveMode})</span>
       </Button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Link2 className="h-5 w-5" /> External REST API
-            </DialogTitle>
-            <DialogDescription>
-              Lovable only builds UI. Your API must implement the endpoints the UI calls (e.g. <code>/account-vault</code>, <code>/projects</code>,
-              <code> /ai-subscriptions</code>) behind the base URL.
-            </DialogDescription>
-          </DialogHeader>
-
-          <ExternalApiSettingsPanel
-            onDone={() => {
-              setBaseUrl(readLS("externalApiBaseUrl", ""));
-              setUseMock(readBool("useMockApi"));
-              setOpen(false);
-            }}
-          />
-
-        </DialogContent>
-      </Dialog>
+      <ResponsiveModal
+        open={open}
+        onOpenChange={setOpen}
+        title={
+          <span className="flex items-center gap-2">
+            <Link2 className="h-5 w-5" /> External REST API
+          </span>
+        }
+        description={
+          <DialogDescription>
+            Lovable only builds UI. Your API must implement the endpoints the UI calls (e.g. <code>/account-vault</code>, <code>/projects</code>,
+            <code> /ai-subscriptions</code>) behind the base URL.
+          </DialogDescription>
+        }
+        contentClassName="max-w-xl"
+      >
+        <ExternalApiSettingsPanel
+          onDone={() => {
+            setBaseUrl(readLS("externalApiBaseUrl", ""));
+            setUseMock(readBool("useMockApi"));
+            setOpen(false);
+          }}
+        />
+      </ResponsiveModal>
     </>
   );
 }

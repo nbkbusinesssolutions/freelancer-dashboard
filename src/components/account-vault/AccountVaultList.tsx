@@ -29,19 +29,21 @@ export default function AccountVaultList({
             <CardContent className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="truncate font-medium">{item.email}</div>
-                  <div className="mt-1 text-sm text-muted-foreground">
-                    {item.platform === "Other" ? item.platformOther || "Other" : item.platform}
+                  <div className="nbk-break-anywhere font-medium">{item.email}</div>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <Badge variant="outline">
+                      {item.platform === "Other" ? item.platformOther || "Other" : item.platform}
+                    </Badge>
+                    <Badge variant={item.isActive ? "default" : "secondary"}>{item.isActive ? "Active" : "Inactive"}</Badge>
                   </div>
                 </div>
-                <Badge variant={item.isActive ? "default" : "secondary"}>{item.isActive ? "Active" : "Inactive"}</Badge>
               </div>
 
               <div className="mt-4 grid grid-cols-2 gap-2">
-                <Button variant="outline" className="w-full" onClick={() => onEdit(item)}>
+                <Button variant="outline" className="min-h-11 w-full" onClick={() => onEdit(item)}>
                   <Pencil className="mr-2 h-4 w-4" /> Edit
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => onDelete(item.id)}>
+                <Button variant="outline" className="min-h-11 w-full" onClick={() => onDelete(item.id)}>
                   <Trash2 className="mr-2 h-4 w-4" /> Delete
                 </Button>
               </div>

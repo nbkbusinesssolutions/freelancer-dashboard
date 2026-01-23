@@ -27,6 +27,7 @@ import { CreatableCombobox } from "@/components/ui/creatable-combobox";
 
 import ServicesCatalogList from "@/components/services/ServicesCatalogList";
 import BillingLogList from "@/components/services/BillingLogList";
+import { useMasterList } from "@/hooks/useMasterList";
 
 function uniqCaseInsensitive(values: string[]) {
   const seen = new Set<string>();
@@ -82,22 +83,30 @@ export default function ServicesPage() {
   const services = servicesQ.data?.items ?? [];
   const billing = billingQ.data?.items ?? [];
 
-  // Suggestion lists (record-only; typing always allowed)
+  const serviceNames = useMasterList("nbk.master.serviceNames", []);
+  const clientNames = useMasterList("nbk.master.clientNames", []);
+  const projectNames = useMasterList("nbk.master.projectNames", []);
+  const paymentModes = useMasterList("nbk.master.paymentModes", ["Bank transfer", "Card", "Cash", "Invoice"]);
+
   const serviceNameOptions = React.useMemo(() => {
-    return uniqCaseInsensitive([...services.map((s) => s.serviceName), ...billing.map((b) => b.serviceName)]).sort((a, b) => a.localeCompare(b));
-  }, [services, billing]);
+    return uniqCaseInsensitive([
+      ...serviceNames.items,
+      ...services.map((s) => s.serviceName),
+      ...billing.map((b) => b.serviceName),
+    ]).sort((a, b) => a.localeCompare(b));
+  }, [serviceNames.items, services, billing]);
 
   const clientNameOptions = React.useMemo(() => {
-    return uniqCaseInsensitive(billing.map((b) => b.clientName)).sort((a, b) => a.localeCompare(b));
-  }, [billing]);
+    return uniqCaseInsensitive([...clientNames.items, ...billing.map((b) => b.clientName)]).sort((a, b) => a.localeCompare(b));
+  }, [clientNames.items, billing]);
 
   const projectNameOptions = React.useMemo(() => {
-    return uniqCaseInsensitive(billing.map((b) => b.projectName ?? "")).sort((a, b) => a.localeCompare(b));
-  }, [billing]);
+    return uniqCaseInsensitive([...projectNames.items, ...billing.map((b) => b.projectName ?? "")]).sort((a, b) => a.localeCompare(b));
+  }, [projectNames.items, billing]);
 
   const paymentModeOptions = React.useMemo(() => {
-    return uniqCaseInsensitive(["Bank transfer", "Card", "Cash", "Invoice", ...billing.map((b) => b.paymentMode ?? "")]).sort((a, b) => a.localeCompare(b));
-  }, [billing]);
+    return uniqCaseInsensitive([...paymentModes.items, ...billing.map((b) => b.paymentMode ?? "")]).sort((a, b) => a.localeCompare(b));
+  }, [paymentModes.items, billing]);
 
   const [tab, setTab] = React.useState<"catalog" | "billing">("catalog");
   const [serviceOpen, setServiceOpen] = React.useState(false);
@@ -314,6 +323,7 @@ export default function ServicesPage() {
                     <CreatableCombobox
                       value={field.value}
                       onChange={field.onChange}
+                      onCreate={(v) => serviceNames.addItem(v)}
                       options={serviceNameOptions}
                       placeholder="Type a service…"
                       searchPlaceholder="Search services…"
@@ -432,6 +442,7 @@ export default function ServicesPage() {
                     <CreatableCombobox
                       value={field.value}
                       onChange={field.onChange}
+                      onCreate={(v) => clientNames.addItem(v)}
                       options={clientNameOptions}
                       placeholder="Type a client name…"
                       searchPlaceholder="Search clients…"
@@ -454,6 +465,7 @@ export default function ServicesPage() {
                     <CreatableCombobox
                       value={field.value ?? ""}
                       onChange={field.onChange}
+                      onCreate={(v) => projectNames.addItem(v)}
                       options={projectNameOptions}
                       placeholder="Type a project name…"
                       searchPlaceholder="Search projects…"
@@ -477,6 +489,7 @@ export default function ServicesPage() {
                       <CreatableCombobox
                         value={field.value}
                         onChange={field.onChange}
+                      onCreate={(v) => serviceNames.addItem(v)}
                         options={serviceNameOptions}
                         placeholder="Select or type a service…"
                         searchPlaceholder="Search services…"
@@ -566,6 +579,7 @@ export default function ServicesPage() {
                       <CreatableCombobox
                         value={field.value ?? ""}
                         onChange={field.onChange}
+                      onCreate={(v) => paymentModes.addItem(v)}
                         options={paymentModeOptions}
                         placeholder="Type a payment mode…"
                         searchPlaceholder="Search payment modes…"

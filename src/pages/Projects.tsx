@@ -27,6 +27,7 @@ import EmailCombobox from "@/components/account-vault/EmailCombobox";
 import { CreatableCombobox } from "@/components/ui/creatable-combobox";
 import { ResponsiveModal } from "@/components/ui/responsive-modal";
 import ProjectsList from "@/components/projects/ProjectsList";
+import { useMasterList } from "@/hooks/useMasterList";
 
 function uniqCaseInsensitive(values: string[]) {
   const seen = new Set<string>();
@@ -87,9 +88,17 @@ export default function ProjectsPage() {
 
   const vault = vaultQ.data?.items ?? [];
 
+  const hostingPlatforms = useMasterList("nbk.master.hostingPlatforms", ["Netlify"]);
+  const domainProviders = useMasterList("nbk.master.domainProviders", ["Namecheap", "GoDaddy"]);
+
   const hostingPlatformOptions = React.useMemo(() => {
-    return uniqCaseInsensitive(["Netlify", ...items.map((p) => p.hostingPlatform)]).sort((a, b) => a.localeCompare(b));
-  }, [items]);
+    return uniqCaseInsensitive([...hostingPlatforms.items, ...items.map((p) => p.hostingPlatform)]).sort((a, b) => a.localeCompare(b));
+  }, [hostingPlatforms.items, items]);
+
+  const domainProviderOptions = React.useMemo(() => {
+    const existing = items.map((p) => (p.domainProvider === "Other" ? p.domainProviderOther : p.domainProvider) ?? "");
+    return uniqCaseInsensitive([...domainProviders.items, ...existing]).sort((a, b) => a.localeCompare(b));
+  }, [domainProviders.items, items]);
 
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
@@ -204,7 +213,7 @@ export default function ProjectsPage() {
                     <FormItem>
                       <FormLabel>Client Name</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input className="min-h-11" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -217,7 +226,7 @@ export default function ProjectsPage() {
                     <FormItem>
                       <FormLabel>Project Name</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input className="min-h-11" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -232,7 +241,7 @@ export default function ProjectsPage() {
                   <FormItem>
                     <FormLabel>Domain Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="example.com" {...field} />
+                      <Input className="min-h-11" placeholder="example.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -256,6 +265,8 @@ export default function ProjectsPage() {
                           onChange={(v) => {
                             const name = v.trim();
                             if (!name) return;
+                            // Persist globally when a new provider is created/selected.
+                            domainProviders.addItem(name);
                             const isCore = ["Namecheap", "GoDaddy"].some((p) => p.toLowerCase() === name.toLowerCase());
                             if (isCore) {
                               const core = (["Namecheap", "GoDaddy"] as const).find((p) => p.toLowerCase() === name.toLowerCase())!;
@@ -266,10 +277,12 @@ export default function ProjectsPage() {
                               form.setValue("domainProviderOther", name, { shouldDirty: true, shouldValidate: true });
                             }
                           }}
-                          options={["Namecheap", "GoDaddy"]}
+                          onCreate={(v) => domainProviders.addItem(v)}
+                          options={domainProviderOptions}
                           placeholder="Select or type a provider…"
                           searchPlaceholder="Search providers…"
                           addLabel={(v) => `+ Add provider: ${v}`}
+                          className="min-h-11"
                         />
                       </FormControl>
                       <FormMessage />
@@ -333,10 +346,12 @@ export default function ProjectsPage() {
                         <CreatableCombobox
                           value={field.value}
                           onChange={field.onChange}
+                          onCreate={(v) => hostingPlatforms.addItem(v)}
                           options={hostingPlatformOptions}
                           placeholder="Type a hosting platform…"
                           searchPlaceholder="Search hosting platforms…"
                           addLabel={(v) => `+ Add hosting platform: ${v}`}
+                          className="min-h-11"
                         />
                       </FormControl>
                       <FormMessage />
@@ -350,7 +365,7 @@ export default function ProjectsPage() {
                     <FormItem>
                       <FormLabel>Domain Purchase Date</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input className="min-h-11" type="date" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -363,7 +378,7 @@ export default function ProjectsPage() {
                     <FormItem>
                       <FormLabel>Domain Renewal Date</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input className="min-h-11" type="date" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -376,7 +391,7 @@ export default function ProjectsPage() {
                     <FormItem>
                       <FormLabel>Hosting Start Date</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input className="min-h-11" type="date" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -393,7 +408,7 @@ export default function ProjectsPage() {
                     <FormItem>
                       <FormLabel>Hosting Renewal Date</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input className="min-h-11" type="date" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

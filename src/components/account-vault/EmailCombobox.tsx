@@ -55,7 +55,7 @@ export default function EmailCombobox({
 
   return (
     <>
-      <div className="flex items-center gap-2">
+      <div className="flex w-full min-w-0 items-center gap-2">
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button
@@ -63,7 +63,7 @@ export default function EmailCombobox({
               variant="outline"
               role="combobox"
               aria-expanded={open}
-              className={cn("min-h-11 w-full justify-between", selected && !selected.isActive && "opacity-70")}
+              className={cn("min-h-11 w-full min-w-0 justify-between", selected && !selected.isActive && "opacity-70")}
             >
               <span className="truncate">
                 {selected ? selected.email : <span className="text-muted-foreground">Select {label}…</span>}

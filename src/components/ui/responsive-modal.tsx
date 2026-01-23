@@ -49,13 +49,13 @@ export function ResponsiveModal({
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className={cn("max-h-[85svh]", "flex flex-col", contentClassName)}>
+        <DrawerContent className={cn("max-h-[85svh]", "flex flex-col overflow-x-hidden", contentClassName)}>
           <DrawerHeader>
             <DrawerTitle>{title}</DrawerTitle>
             {description ? <DrawerDescription>{description}</DrawerDescription> : null}
           </DrawerHeader>
 
-          <div className="min-h-0 flex-1 overflow-auto px-4 pb-2">
+          <div className="min-h-0 flex-1 overflow-auto overflow-x-hidden px-4 pb-2">
             {children}
           </div>
 
