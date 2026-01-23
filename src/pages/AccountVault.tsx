@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import AccountVaultUpsertDialog from "@/components/account-vault/AccountVaultUpsertDialog";
+import AccountVaultBulkAddDialog from "@/components/account-vault/AccountVaultBulkAddDialog";
 
 export default function AccountVaultPage() {
   const q = useAccountVault();
@@ -20,6 +21,7 @@ export default function AccountVaultPage() {
   const [search, setSearch] = React.useState("");
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<AccountVaultItem | undefined>(undefined);
+  const [bulkOpen, setBulkOpen] = React.useState(false);
 
   const takenEmails = React.useMemo(() => items.map((i) => i.email), [items]);
   const filtered = items.filter((i) => i.email.toLowerCase().includes(search.trim().toLowerCase()));
@@ -32,6 +34,9 @@ export default function AccountVaultPage() {
           <p className="text-sm text-muted-foreground">Central registry of every account email used anywhere.</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setBulkOpen(true)}>
+            Bulk Add
+          </Button>
           <Button
             onClick={() => {
               setEditing(undefined);
@@ -120,6 +125,8 @@ export default function AccountVaultPage() {
         existing={editing}
         takenEmails={takenEmails}
       />
+
+      <AccountVaultBulkAddDialog open={bulkOpen} onOpenChange={setBulkOpen} takenEmails={takenEmails} />
     </main>
   );
 }
