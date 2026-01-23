@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -12,16 +12,6 @@ import { computeSubscriptionStatus } from "@/lib/subscriptionStatus";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -44,6 +34,8 @@ import { Switch } from "@/components/ui/switch";
 
 import { CreatableCombobox } from "@/components/ui/creatable-combobox";
 import { useMasterList } from "@/hooks/useMasterList";
+import { ResponsiveModal } from "@/components/ui/responsive-modal";
+import AISubscriptionsList from "@/components/ai-subscriptions/AISubscriptionsList";
 
 const CORE_PLATFORMS: Exclude<Platform, "Other">[] = [
   "Gmail",
@@ -150,7 +142,7 @@ export default function AISubscriptionsPage() {
           <h1 className="text-2xl font-semibold tracking-tight">AI Subscriptions</h1>
           <p className="text-sm text-muted-foreground">Prevent forgotten trials and surprise charges.</p>
         </div>
-        <Button onClick={() => setOpen(true)}>
+        <Button className="w-full sm:w-auto" onClick={() => setOpen(true)}>
           <Plus className="mr-2 h-4 w-4" /> Add Subscription
         </Button>
       </header>
@@ -160,79 +152,40 @@ export default function AISubscriptionsPage() {
           <CardTitle className="text-base">Subscriptions {filterStatus ? `(filtered: ${filterStatus})` : ""}</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Tool</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Cancel-by</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered
-                .sort((a, b) => (a.computedStatus === "Expired" ? 1 : -1))
-                .map((s) => (
-                  <TableRow key={s.id} id={`sub-${s.id}`} className={s.computedStatus === "Expired" ? "opacity-80" : undefined}>
-                    <TableCell className="font-medium">{s.toolName}</TableCell>
-                    <TableCell>{s.subscriptionType}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          s.computedStatus === "Expired"
-                            ? "destructive"
-                            : s.computedStatus === "Expiring Soon"
-                              ? "secondary"
-                              : s.computedStatus === "Cancelled"
-                                ? "outline"
-                                : "default"
-                        }
-                      >
-                        {s.computedStatus}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{s.cancelByDate || "—"}</TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={async () => {
-                          try {
-                            await del.mutateAsync(s.id);
-                            toast({ title: "Deleted" });
-                          } catch (e: any) {
-                            toast({ title: "Delete failed", description: e?.message ? String(e.message) : "", variant: "destructive" });
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Delete</span>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              {filtered.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-muted-foreground">
-                    {q.isLoading ? "Loading…" : "No subscriptions yet."}
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <AISubscriptionsList
+            items={filtered}
+            loading={q.isLoading}
+            onDelete={async (id) => {
+              try {
+                await del.mutateAsync(id);
+                toast({ title: "Deleted" });
+              } catch (e: any) {
+                toast({ title: "Delete failed", description: e?.message ? String(e.message) : "", variant: "destructive" });
+              }
+            }}
+          />
         </CardContent>
       </Card>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Add Subscription</DialogTitle>
-            <DialogDescription>Personal tools only. Optional password is temporary storage.</DialogDescription>
-          </DialogHeader>
-
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <ResponsiveModal
+        open={open}
+        onOpenChange={setOpen}
+        title="Add Subscription"
+        description="Personal tools only. Optional password is temporary storage."
+        contentClassName="max-w-2xl"
+        footer={
+          <>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" form="ai-sub-form" disabled={upsert.isPending}>
+              Save
+            </Button>
+          </>
+        }
+      >
+        <Form {...form}>
+          <form id="ai-sub-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
@@ -403,19 +356,9 @@ export default function AISubscriptionsPage() {
                   </FormItem>
                 )}
               />
-
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={upsert.isPending}>
-                  Save
-                </Button>
-              </DialogFooter>
             </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+        </Form>
+      </ResponsiveModal>
     </main>
   );
 }

@@ -4,6 +4,7 @@ import { formatISO } from "date-fns";
 import { useAISubscriptions, useProjects } from "@/hooks/useApiData";
 import { computeSubscriptionStatus, getDaysLeft } from "@/lib/subscriptionStatus";
 import { hasShownReminder, markReminderShown, type ReminderStage } from "@/hooks/useLocalReminderLog";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,7 @@ function stageLabel(stage: ReminderStage) {
 
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const projectsQ = useProjects();
   const subsQ = useAISubscriptions();
 
@@ -139,35 +141,54 @@ export default function DashboardPage() {
             <CardDescription>Fast scan. No clutter.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Project</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            {isMobile ? (
+              <div className="space-y-3">
                 {projects.slice(0, 6).map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell className="font-medium">{p.clientName}</TableCell>
-                    <TableCell>{p.projectName}</TableCell>
-                    <TableCell>
+                  <div key={p.id} className="rounded-md border p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="truncate text-sm text-muted-foreground">{p.clientName}</div>
+                        <div className="truncate font-medium">{p.projectName}</div>
+                      </div>
                       <Badge variant={p.status === "On Hold" ? "secondary" : p.status === "Completed" ? "outline" : "default"}>
                         {p.status}
                       </Badge>
-                    </TableCell>
-                  </TableRow>
+                    </div>
+                  </div>
                 ))}
-                {projects.length === 0 && (
+                {projects.length === 0 && <div className="rounded-md border p-3 text-sm text-muted-foreground">No projects yet.</div>}
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={3} className="text-muted-foreground">
-                      No projects yet.
-                    </TableCell>
+                    <TableHead>Client</TableHead>
+                    <TableHead>Project</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {projects.slice(0, 6).map((p) => (
+                    <TableRow key={p.id}>
+                      <TableCell className="font-medium">{p.clientName}</TableCell>
+                      <TableCell>{p.projectName}</TableCell>
+                      <TableCell>
+                        <Badge variant={p.status === "On Hold" ? "secondary" : p.status === "Completed" ? "outline" : "default"}>
+                          {p.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {projects.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={3} className="text-muted-foreground">
+                        No projects yet.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            )}
             <div className="mt-3">
               <Button asChild variant="link" className="px-0">
                 <Link to="/projects">Open Projects →</Link>
@@ -182,38 +203,62 @@ export default function DashboardPage() {
             <CardDescription>Personal tools only.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Tool</TableHead>
-                  <TableHead>Days left</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            {isMobile ? (
+              <div className="space-y-3">
                 {computedSubs
                   .filter((s) => s.daysLeft !== null && s.daysLeft <= 7)
                   .slice(0, 7)
                   .map((s) => (
-                    <TableRow key={s.id}>
-                      <TableCell className="font-medium">{s.toolName}</TableCell>
-                      <TableCell>{s.daysLeft}</TableCell>
-                      <TableCell>
+                    <div key={s.id} className="rounded-md border p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="truncate font-medium">{s.toolName}</div>
+                          <div className="mt-1 text-sm text-muted-foreground">Days left: {s.daysLeft}</div>
+                        </div>
                         <Badge variant={s.status === "Expired" ? "destructive" : s.status === "Expiring Soon" ? "secondary" : "outline"}>
                           {s.status}
                         </Badge>
-                      </TableCell>
-                    </TableRow>
+                      </div>
+                    </div>
                   ))}
                 {computedSubs.filter((s) => s.daysLeft !== null && s.daysLeft <= 7).length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={3} className="text-muted-foreground">
-                      No upcoming expiries.
-                    </TableCell>
-                  </TableRow>
+                  <div className="rounded-md border p-3 text-sm text-muted-foreground">No upcoming expiries.</div>
                 )}
-              </TableBody>
-            </Table>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Tool</TableHead>
+                    <TableHead>Days left</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {computedSubs
+                    .filter((s) => s.daysLeft !== null && s.daysLeft <= 7)
+                    .slice(0, 7)
+                    .map((s) => (
+                      <TableRow key={s.id}>
+                        <TableCell className="font-medium">{s.toolName}</TableCell>
+                        <TableCell>{s.daysLeft}</TableCell>
+                        <TableCell>
+                          <Badge variant={s.status === "Expired" ? "destructive" : s.status === "Expiring Soon" ? "secondary" : "outline"}>
+                            {s.status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  {computedSubs.filter((s) => s.daysLeft !== null && s.daysLeft <= 7).length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={3} className="text-muted-foreground">
+                        No upcoming expiries.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            )}
             <div className="mt-3">
               <Button asChild variant="link" className="px-0">
                 <Link to="/ai-subscriptions">Open AI Subscriptions →</Link>

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -12,16 +12,6 @@ import type { ProjectItem, ProjectStatus } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -42,6 +32,8 @@ import {
 
 import { CreatableCombobox } from "@/components/ui/creatable-combobox";
 import { useMasterList } from "@/hooks/useMasterList";
+import { ResponsiveModal } from "@/components/ui/responsive-modal";
+import ProjectsList from "@/components/projects/ProjectsList";
 
 const STATUSES: ProjectStatus[] = ["Active", "Completed", "On Hold"];
 
@@ -140,7 +132,7 @@ export default function ProjectsPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Projects</h1>
           <p className="text-sm text-muted-foreground">Client website management with clear account traceability.</p>
         </div>
-        <Button onClick={() => setOpen(true)}>
+        <Button className="w-full sm:w-auto" onClick={() => setOpen(true)}>
           <Plus className="mr-2 h-4 w-4" /> Create Project
         </Button>
       </header>
@@ -150,67 +142,40 @@ export default function ProjectsPage() {
           <CardTitle className="text-base">Projects {filterStatus ? `(filtered: ${filterStatus})` : ""}</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Client</TableHead>
-                <TableHead>Project</TableHead>
-                <TableHead>Domain</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((p) => (
-                <TableRow key={p.id}>
-                  <TableCell className="font-medium">{p.clientName}</TableCell>
-                  <TableCell>{p.projectName}</TableCell>
-                  <TableCell>{p.domainName}</TableCell>
-                  <TableCell>
-                    <Badge variant={p.status === "On Hold" ? "secondary" : p.status === "Completed" ? "outline" : "default"}>
-                      {p.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={async () => {
-                        try {
-                          await del.mutateAsync(p.id);
-                          toast({ title: "Deleted" });
-                        } catch (e: any) {
-                          toast({ title: "Delete failed", description: e?.message ? String(e.message) : "", variant: "destructive" });
-                        }
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="sr-only">Delete</span>
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {filtered.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-muted-foreground">
-                    {projectsQ.isLoading ? "Loading…" : "No projects yet."}
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <ProjectsList
+            items={filtered}
+            loading={projectsQ.isLoading}
+            onDelete={async (id) => {
+              try {
+                await del.mutateAsync(id);
+                toast({ title: "Deleted" });
+              } catch (e: any) {
+                toast({ title: "Delete failed", description: e?.message ? String(e.message) : "", variant: "destructive" });
+              }
+            }}
+          />
         </CardContent>
       </Card>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Create Project</DialogTitle>
-            <DialogDescription>Everything references Account Vault first.</DialogDescription>
-          </DialogHeader>
-
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <ResponsiveModal
+        open={open}
+        onOpenChange={setOpen}
+        title="Create Project"
+        description="Everything references Account Vault first."
+        contentClassName="max-w-2xl"
+        footer={
+          <>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" form="project-create-form" disabled={upsert.isPending}>
+              Save
+            </Button>
+          </>
+        }
+      >
+        <Form {...form}>
+          <form id="project-create-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
@@ -430,19 +395,9 @@ export default function ProjectsPage() {
                   </FormItem>
                 )}
               />
-
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={upsert.isPending}>
-                  Save
-                </Button>
-              </DialogFooter>
             </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+        </Form>
+      </ResponsiveModal>
     </main>
   );
 }
