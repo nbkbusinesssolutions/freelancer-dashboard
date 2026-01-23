@@ -26,18 +26,22 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
-const PLATFORMS: Platform[] = ["Gmail", "Namecheap", "GoDaddy", "Netlify", "Cursor", "Lovable", "Replit", "Other"];
+import { CreatableCombobox } from "@/components/ui/creatable-combobox";
+import { useMasterList } from "@/hooks/useMasterList";
+
+const CORE_PLATFORMS: Exclude<Platform, "Other">[] = [
+  "Gmail",
+  "Namecheap",
+  "GoDaddy",
+  "Netlify",
+  "Cursor",
+  "Lovable",
+  "Replit",
+];
 
 type ParsedRow = {
   line: number;
@@ -103,8 +107,7 @@ function parseBulkText(input: string) {
 
 const schema = z.object({
   bulkText: z.string().trim().min(1, "Paste emails first"),
-  platform: z.enum(PLATFORMS as [Platform, ...Platform[]]),
-  platformOther: z.string().trim().max(50).optional(),
+  platformName: z.string().trim().min(1, "Select or type a platform").max(50),
   isActive: z.boolean().default(true),
   skipDuplicates: z.boolean().default(true),
 });
@@ -119,13 +122,13 @@ export default function AccountVaultBulkAddDialog({
   takenEmails: string[];
 }) {
   const upsert = useUpsertAccountVault();
+  const platforms = useMasterList("nbk.master.platforms", CORE_PLATFORMS);
 
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: {
       bulkText: "",
-      platform: "Gmail",
-      platformOther: "",
+      platformName: "Gmail",
       isActive: true,
       skipDuplicates: true,
     },
@@ -135,8 +138,7 @@ export default function AccountVaultBulkAddDialog({
     if (!open) return;
     form.reset({
       bulkText: "",
-      platform: "Gmail",
-      platformOther: "",
+      platformName: "Gmail",
       isActive: true,
       skipDuplicates: true,
     });
@@ -189,7 +191,13 @@ export default function AccountVaultBulkAddDialog({
   }
 
   async function onSubmit(values: z.infer<typeof schema>) {
-    const platformOther = values.platform === "Other" ? (values.platformOther?.trim() || null) : null;
+    const platformName = values.platformName.trim();
+    if (platformName) platforms.addItem(platformName);
+    const isCorePlatform = CORE_PLATFORMS.some((p) => p.toLowerCase() === platformName.toLowerCase());
+    const platform: Platform = isCorePlatform
+      ? (CORE_PLATFORMS.find((p) => p.toLowerCase() === platformName.toLowerCase()) as Platform)
+      : "Other";
+    const platformOther = isCorePlatform ? null : platformName;
 
     const rowsToCreate = parsed.rows.filter((r) => r.valid && (!r.duplicate || !values.skipDuplicates));
     if (rowsToCreate.length === 0) {
@@ -202,7 +210,7 @@ export default function AccountVaultBulkAddDialog({
         rowsToCreate.map((r) =>
           upsert.mutateAsync({
             email: r.email,
-            platform: values.platform,
+              platform,
             platformOther,
             username: r.username || null,
             notes: null,
@@ -244,44 +252,24 @@ export default function AccountVaultBulkAddDialog({
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <FormField
                 control={form.control}
-                name="platform"
+                name="platformName"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Platform (applies to all)</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select platform" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {PLATFORMS.map((p) => (
-                          <SelectItem key={p} value={p}>
-                            {p}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <CreatableCombobox
+                        value={field.value}
+                        onChange={field.onChange}
+                        options={platforms.items}
+                        placeholder="Select or type a platform…"
+                        searchPlaceholder="Search platform…"
+                        addLabel={(v) => `+ Add platform: ${v}`}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
-              {form.watch("platform") === "Other" && (
-                <FormField
-                  control={form.control}
-                  name="platformOther"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Other platform</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter Platform Name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
 
               <div className="space-y-2">
                 <FormField
@@ -421,3 +409,4 @@ export default function AccountVaultBulkAddDialog({
     </Dialog>
   );
 }
+
