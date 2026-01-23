@@ -1,4 +1,4 @@
-import { Vault, LayoutDashboard, FolderKanban, Sparkles } from "lucide-react";
+import { Vault, LayoutDashboard, FolderKanban, Sparkles, Settings } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -18,6 +18,7 @@ const items = [
   { title: "Account Vault", url: "/account-vault", icon: Vault },
   { title: "Projects", url: "/projects", icon: FolderKanban },
   { title: "AI Subscriptions", url: "/ai-subscriptions", icon: Sparkles },
+  { title: "Settings", url: "/settings", icon: Settings },
 ];
 
 export default function AppSidebar() {
