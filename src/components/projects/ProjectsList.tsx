@@ -44,9 +44,9 @@ export default function ProjectsList({
             <CardContent className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="truncate text-sm text-muted-foreground">{p.clientName}</div>
-                  <div className="truncate font-medium">{p.projectName}</div>
-                  <div className="mt-1 truncate text-sm text-muted-foreground">{p.domainName}</div>
+                  <div className="nbk-break-anywhere text-sm text-muted-foreground">{p.clientName}</div>
+                  <div className="nbk-break-anywhere font-medium">{p.projectName}</div>
+                  <div className="mt-1 nbk-break-anywhere text-sm text-muted-foreground">{p.domainName}</div>
                 </div>
                 <Badge variant={statusVariant(p.status)}>{p.status}</Badge>
               </div>
@@ -67,7 +67,7 @@ export default function ProjectsList({
               )}
 
               <div className="mt-4">
-                <Button variant="outline" className="w-full" onClick={() => onDelete(p.id)}>
+                <Button variant="outline" className="min-h-11 w-full" onClick={() => onDelete(p.id)}>
                   <Trash2 className="mr-2 h-4 w-4" /> Delete
                 </Button>
               </div>

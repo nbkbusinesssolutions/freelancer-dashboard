@@ -277,8 +277,8 @@ export default function DashboardPage() {
                   <div key={p.id} className="rounded-md border p-3">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <div className="truncate text-xs text-muted-foreground">{p.clientName}</div>
-                        <div className="truncate font-medium">{p.projectName}</div>
+                        <div className="nbk-break-anywhere text-xs text-muted-foreground">{p.clientName}</div>
+                        <div className="nbk-break-anywhere font-medium">{p.projectName}</div>
                       </div>
                       <Badge variant={p.status === "On Hold" ? "secondary" : p.status === "Completed" ? "outline" : "default"}>
                         {p.status}
@@ -342,7 +342,7 @@ export default function DashboardPage() {
                     <div key={s.id} className="rounded-md border p-3">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <div className="truncate font-medium">{s.toolName}</div>
+                          <div className="nbk-break-anywhere font-medium">{s.toolName}</div>
                           <div className="mt-1 text-xs text-muted-foreground">Days left: {s.daysLeft}</div>
                         </div>
                         <Badge variant={s.status === "Expired" ? "destructive" : s.status === "Expiring Soon" ? "secondary" : "outline"}>

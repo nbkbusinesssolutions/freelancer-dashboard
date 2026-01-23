@@ -76,7 +76,7 @@ export default function DashboardAttentionPanel({
                 {upcomingAi.slice(0, 6).map((s) => (
                   <div key={s.id} className="flex items-start justify-between gap-3 rounded-md border p-3">
                     <div className="min-w-0">
-                      <div className="truncate font-medium">{s.toolName}</div>
+                      <div className="nbk-break-anywhere font-medium">{s.toolName}</div>
                       <div className="mt-1 text-xs text-muted-foreground">Days left: {s.daysLeft}</div>
                     </div>
                     <Badge
@@ -106,7 +106,7 @@ export default function DashboardAttentionPanel({
                 {upcomingDomains.slice(0, 6).map((r) => (
                   <div key={r.id} className="flex items-start justify-between gap-3 rounded-md border p-3">
                     <div className="min-w-0">
-                      <div className="truncate font-medium">{r.toolName}</div>
+                      <div className="nbk-break-anywhere font-medium">{r.toolName}</div>
                       <div className="mt-1 text-xs text-muted-foreground">Days left: {r.daysLeft}</div>
                     </div>
                     <Badge variant={r.status === "Expired" ? "destructive" : r.status === "Expiring Soon" ? "secondary" : "outline"}>
@@ -132,7 +132,7 @@ export default function DashboardAttentionPanel({
                 {upcomingHosting.slice(0, 6).map((r) => (
                   <div key={r.id} className="flex items-start justify-between gap-3 rounded-md border p-3">
                     <div className="min-w-0">
-                      <div className="truncate font-medium">{r.toolName}</div>
+                      <div className="nbk-break-anywhere font-medium">{r.toolName}</div>
                       <div className="mt-1 text-xs text-muted-foreground">Days left: {r.daysLeft}</div>
                     </div>
                     <Badge variant={r.status === "Expired" ? "destructive" : r.status === "Expiring Soon" ? "secondary" : "outline"}>

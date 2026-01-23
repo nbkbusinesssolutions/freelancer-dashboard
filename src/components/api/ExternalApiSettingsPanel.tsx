@@ -48,6 +48,7 @@ export default function ExternalApiSettingsPanel({
       <div className="space-y-2">
         <div className="text-sm font-medium">Base URL (include your /api prefix)</div>
         <Input
+          className="min-h-11"
           value={baseUrl}
           onChange={(e) => setBaseUrl(e.target.value)}
           placeholder="https://your-service.com/api"
@@ -61,11 +62,11 @@ export default function ExternalApiSettingsPanel({
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div className="space-y-2">
           <div className="text-sm font-medium">API key header name</div>
-          <Input value={apiKeyHeader} onChange={(e) => setApiKeyHeader(e.target.value)} placeholder="X-API-Key" autoComplete="off" />
+          <Input className="min-h-11" value={apiKeyHeader} onChange={(e) => setApiKeyHeader(e.target.value)} placeholder="X-API-Key" autoComplete="off" />
         </div>
         <div className="space-y-2">
           <div className="text-sm font-medium">API key value</div>
-          <Input value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="paste key" autoComplete="off" />
+          <Input className="min-h-11" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="paste key" autoComplete="off" />
         </div>
       </div>
 
@@ -81,6 +82,7 @@ export default function ExternalApiSettingsPanel({
         <Button
           type="button"
           variant="outline"
+          className="min-h-11"
           onClick={() => {
             setBaseUrl(readLS("externalApiBaseUrl", ""));
             setApiKeyHeader(readLS("externalApiKeyHeader", "X-API-Key"));
@@ -93,6 +95,7 @@ export default function ExternalApiSettingsPanel({
         </Button>
         <Button
           type="button"
+          className="min-h-11"
           onClick={() => {
             writeLS("externalApiBaseUrl", baseUrl.trim().replace(/\/$/, ""));
             writeLS("externalApiKeyHeader", apiKeyHeader.trim() || "X-API-Key");
