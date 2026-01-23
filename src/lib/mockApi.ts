@@ -122,7 +122,9 @@ export async function mockApiFetchJson<T>(path: string, init?: RequestInit): Pro
         deploymentEmailId: body?.deploymentEmailId,
         deploymentUsernameOverride: body?.deploymentUsernameOverride ?? null,
         domainPurchaseDate: body?.domainPurchaseDate ?? null,
+        domainRenewalDate: body?.domainRenewalDate ?? null,
         hostingStartDate: body?.hostingStartDate ?? null,
+        hostingRenewalDate: body?.hostingRenewalDate ?? null,
         status: body?.status,
         notes: body?.notes ?? null,
       };

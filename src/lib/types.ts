@@ -34,7 +34,9 @@ export type ProjectItem = {
   deploymentEmailId: string; // FK to AccountVaultItem
   deploymentUsernameOverride?: string | null;
   domainPurchaseDate?: string | null; // ISO date
+  domainRenewalDate?: string | null; // ISO date
   hostingStartDate?: string | null; // ISO date
+  hostingRenewalDate?: string | null; // ISO date
   status: ProjectStatus;
   notes?: string | null;
 };

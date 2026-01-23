@@ -21,10 +21,14 @@ export type DashboardExpiryRow = {
 
 export default function DashboardAttentionPanel({
   reminder,
-  upcoming,
+  upcomingAi,
+  upcomingDomains,
+  upcomingHosting,
 }: {
   reminder: DashboardReminderHit | null;
-  upcoming: DashboardExpiryRow[];
+  upcomingAi: DashboardExpiryRow[];
+  upcomingDomains: DashboardExpiryRow[];
+  upcomingHosting: DashboardExpiryRow[];
 }) {
   const navigate = useNavigate();
 
@@ -64,15 +68,12 @@ export default function DashboardAttentionPanel({
 
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-3">
-              <div className="text-sm font-medium">Upcoming expiries (≤ 7 days)</div>
-              <Button variant="outline" className="min-h-11" onClick={() => navigate("/ai-subscriptions")}
-              >
-                Open
-              </Button>
+              <div className="text-sm font-medium">AI expiries (≤ 7 days)</div>
+              <Button variant="outline" className="min-h-11" onClick={() => navigate("/ai-subscriptions")}>Open</Button>
             </div>
-            {upcoming.length ? (
+            {upcomingAi.length ? (
               <div className="space-y-2">
-                {upcoming.slice(0, 6).map((s) => (
+                {upcomingAi.slice(0, 6).map((s) => (
                   <div key={s.id} className="flex items-start justify-between gap-3 rounded-md border p-3">
                     <div className="min-w-0">
                       <div className="truncate font-medium">{s.toolName}</div>
@@ -90,6 +91,58 @@ export default function DashboardAttentionPanel({
               </div>
             ) : (
               <div className="rounded-md border p-3 text-sm text-muted-foreground">No upcoming expiries.</div>
+            )}
+          </div>
+
+          <Separator />
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-sm font-medium">Domain renewals (≤ 30 days)</div>
+              <Button variant="outline" className="min-h-11" onClick={() => navigate("/projects?renewal=domain")}>Open</Button>
+            </div>
+            {upcomingDomains.length ? (
+              <div className="space-y-2">
+                {upcomingDomains.slice(0, 6).map((r) => (
+                  <div key={r.id} className="flex items-start justify-between gap-3 rounded-md border p-3">
+                    <div className="min-w-0">
+                      <div className="truncate font-medium">{r.toolName}</div>
+                      <div className="mt-1 text-xs text-muted-foreground">Days left: {r.daysLeft}</div>
+                    </div>
+                    <Badge variant={r.status === "Expired" ? "destructive" : r.status === "Expiring Soon" ? "secondary" : "outline"}>
+                      {r.status}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-md border p-3 text-sm text-muted-foreground">No upcoming domain renewals.</div>
+            )}
+          </div>
+
+          <Separator />
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-sm font-medium">Hosting renewals (≤ 30 days)</div>
+              <Button variant="outline" className="min-h-11" onClick={() => navigate("/projects?renewal=hosting")}>Open</Button>
+            </div>
+            {upcomingHosting.length ? (
+              <div className="space-y-2">
+                {upcomingHosting.slice(0, 6).map((r) => (
+                  <div key={r.id} className="flex items-start justify-between gap-3 rounded-md border p-3">
+                    <div className="min-w-0">
+                      <div className="truncate font-medium">{r.toolName}</div>
+                      <div className="mt-1 text-xs text-muted-foreground">Days left: {r.daysLeft}</div>
+                    </div>
+                    <Badge variant={r.status === "Expired" ? "destructive" : r.status === "Expiring Soon" ? "secondary" : "outline"}>
+                      {r.status}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-md border p-3 text-sm text-muted-foreground">No upcoming hosting renewals.</div>
             )}
           </div>
         </CardContent>
