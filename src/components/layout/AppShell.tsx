@@ -14,7 +14,7 @@ export default function AppShell() {
             <SidebarTrigger />
             <Separator orientation="vertical" className="h-6" />
             <div className="min-w-0">
-              <div className="truncate text-sm font-medium">Internal Business Control Dashboard</div>
+              <div className="truncate text-sm font-medium">NBK Business Dashboard</div>
             </div>
             <div className="ml-auto flex items-center gap-2">
               <ExternalApiSettings />
