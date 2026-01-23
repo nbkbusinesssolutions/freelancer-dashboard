@@ -10,6 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import DashboardAttentionPanel from "@/components/dashboard/DashboardAttentionPanel";
+import DashboardKpiGrid, { type DashboardKpi } from "@/components/dashboard/DashboardKpiGrid";
 
 function stageLabel(stage: ReminderStage) {
   if (stage === 0) return "Expired";
@@ -36,6 +38,15 @@ export default function DashboardPage() {
   const expiringSoon = computedSubs.filter((s) => s.status === "Expiring Soon");
   const expired = computedSubs.filter((s) => s.status === "Expired");
 
+  const upcoming7 = computedSubs
+    .filter((s) => s.daysLeft !== null && s.daysLeft <= 7)
+    .map((s) => ({
+      id: s.id,
+      toolName: s.toolName,
+      daysLeft: s.daysLeft as number,
+      status: s.status as "Active" | "Expiring Soon" | "Expired",
+    }));
+
   // Local-only reminders (per-device) – shown once per stage per day.
   const todayIso = formatISO(new Date(), { representation: "date" });
   const reminderStages: ReminderStage[] = [7, 3, 1, 0];
@@ -53,87 +64,72 @@ export default function DashboardPage() {
     })
     .sort((a, b) => a.stage - b.stage)[0];
 
+  const kpis: DashboardKpi[] = [
+    {
+      title: "Total Projects",
+      value: projects.length,
+      actionLabel: "Open",
+      actionTo: "/projects",
+      sparkline: projects.map((p) => (p.status === "Active" ? 1 : 0)).slice(-14),
+      tone: "primary",
+    },
+    {
+      title: "Active Domains",
+      value: projects.filter((p) => p.status === "Active").length,
+      actionLabel: "Filter",
+      actionTo: "/projects?status=Active",
+      sparkline: projects.map((p) => (p.status === "Active" ? 1 : 0)).slice(-14),
+      tone: "muted",
+    },
+    {
+      title: "AI Expiring Soon",
+      value: expiringSoon.length,
+      actionLabel: "Review",
+      actionTo: "/ai-subscriptions?status=Expiring%20Soon",
+      sparkline: computedSubs
+        .filter((s) => s.daysLeft !== null && s.daysLeft <= 14)
+        .slice(0, 14)
+        .map((s) => Math.max(0, 14 - (s.daysLeft ?? 14))),
+      tone: "muted",
+    },
+    {
+      title: "Expired Items",
+      value: expired.length,
+      actionLabel: "Review",
+      actionTo: "/ai-subscriptions?status=Expired",
+      sparkline: computedSubs
+        .filter((s) => s.daysLeft !== null)
+        .slice(0, 14)
+        .map((s) => ((s.daysLeft ?? 0) < 0 ? Math.min(14, Math.abs(s.daysLeft ?? 0)) : 0)),
+      tone: "destructive",
+    },
+  ];
+
   return (
-    <main className="space-y-6">
-      <header>
+    <main className="space-y-5">
+      <header className="space-y-1">
         <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Where is everything, who owns it, and what needs action.</p>
+        <p className="text-sm text-muted-foreground">Operational view — fast scan, clear next actions.</p>
       </header>
 
-      {reminderHit && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between gap-2">
-              <span>Reminder: {stageLabel(reminderHit.stage)}</span>
-              <Button
-                variant="secondary"
-                className="min-h-11"
-                onClick={() => {
+      <DashboardAttentionPanel
+        reminder={
+          reminderHit
+            ? {
+                stageLabel: stageLabel(reminderHit.stage),
+                toolName: reminderHit.sub.toolName,
+                cancelByDate: reminderHit.sub.cancelByDate ?? undefined,
+                onReview: () => {
                   markReminderShown(reminderHit.key, todayIso);
                   navigate(`/ai-subscriptions?focus=${encodeURIComponent(reminderHit.sub.id)}`);
-                }}
-              >
-                Review
-              </Button>
-            </CardTitle>
-            <CardDescription>
-              {reminderHit.sub.toolName}
-              {reminderHit.sub.cancelByDate ? ` • cancel-by ${reminderHit.sub.cancelByDate}` : ""}
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      )}
+                },
+              }
+            : null
+        }
+        upcoming={upcoming7}
+      />
 
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Total Projects</CardDescription>
-            <CardTitle className="text-3xl">{projects.length}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button variant="outline" className="min-h-11 w-full" onClick={() => navigate("/projects")}
-            >
-              View
-            </Button>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Active Domains</CardDescription>
-            <CardTitle className="text-3xl">{projects.filter((p) => p.status === "Active").length}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button variant="outline" className="min-h-11 w-full" onClick={() => navigate("/projects?status=Active")}
-            >
-              Filter
-            </Button>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>AI Expiring Soon</CardDescription>
-            <CardTitle className="text-3xl">{expiringSoon.length}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button variant="outline" className="min-h-11 w-full" onClick={() => navigate("/ai-subscriptions?status=Expiring%20Soon")}
-            >
-              Filter
-            </Button>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Expired Items</CardDescription>
-            <CardTitle className="text-3xl">{expired.length}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button variant="outline" className="min-h-11 w-full" onClick={() => navigate("/ai-subscriptions?status=Expired")}
-            >
-              Review
-            </Button>
-          </CardContent>
-        </Card>
-      </section>
+      <DashboardKpiGrid items={kpis} />
 
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
@@ -143,12 +139,12 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             {isMobile ? (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {projects.slice(0, 6).map((p) => (
                   <div key={p.id} className="rounded-md border p-3">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <div className="truncate text-sm text-muted-foreground">{p.clientName}</div>
+                        <div className="truncate text-xs text-muted-foreground">{p.clientName}</div>
                         <div className="truncate font-medium">{p.projectName}</div>
                       </div>
                       <Badge variant={p.status === "On Hold" ? "secondary" : p.status === "Completed" ? "outline" : "default"}>
@@ -205,7 +201,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             {isMobile ? (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {computedSubs
                   .filter((s) => s.daysLeft !== null && s.daysLeft <= 7)
                   .slice(0, 7)
@@ -214,7 +210,7 @@ export default function DashboardPage() {
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <div className="truncate font-medium">{s.toolName}</div>
-                          <div className="mt-1 text-sm text-muted-foreground">Days left: {s.daysLeft}</div>
+                          <div className="mt-1 text-xs text-muted-foreground">Days left: {s.daysLeft}</div>
                         </div>
                         <Badge variant={s.status === "Expired" ? "destructive" : s.status === "Expiring Soon" ? "secondary" : "outline"}>
                           {s.status}
