@@ -101,5 +101,22 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
+  }
+
+  html {
+    overflow-x: hidden;
+  }
+
+  #root {
+    overflow-x: hidden;
+  }
+}
+
+@layer utilities {
+  /* Prevent long tokens (emails/domains/IDs) from forcing horizontal scroll */
+  .nbk-break-anywhere {
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 }

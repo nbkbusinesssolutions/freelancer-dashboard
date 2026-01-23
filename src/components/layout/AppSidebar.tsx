@@ -1,4 +1,4 @@
-import { Vault, LayoutDashboard, FolderKanban, Sparkles, Settings } from "lucide-react";
+import { Vault, LayoutDashboard, FolderKanban, Sparkles, Settings, Receipt } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -15,9 +15,10 @@ import {
 
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Account Vault", url: "/account-vault", icon: Vault },
   { title: "Projects", url: "/projects", icon: FolderKanban },
+  { title: "Services & Billing", url: "/services", icon: Receipt },
   { title: "AI Subscriptions", url: "/ai-subscriptions", icon: Sparkles },
+  { title: "Account Vault", url: "/account-vault", icon: Vault },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 

@@ -9,14 +9,7 @@ import { toast } from "@/hooks/use-toast";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ResponsiveModal } from "@/components/ui/responsive-modal";
 import {
   Form,
   FormControl,
@@ -128,15 +121,25 @@ export default function AccountVaultUpsertDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{existing ? "Edit Account" : "Add to Account Vault"}</DialogTitle>
-          <DialogDescription>One email = one source of truth. Keep it clean.</DialogDescription>
-        </DialogHeader>
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+    <ResponsiveModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title={existing ? "Edit Account" : "Add to Account Vault"}
+      description="One email = one source of truth. Keep it clean."
+      contentClassName="max-w-lg"
+      footer={
+        <>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="min-h-11">
+            Cancel
+          </Button>
+          <Button type="submit" form="account-vault-upsert" disabled={upsert.isPending} className="min-h-11">
+            {existing ? "Save" : "Add"}
+          </Button>
+        </>
+      }
+    >
+      <Form {...form}>
+        <form id="account-vault-upsert" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="email"
@@ -144,7 +147,7 @@ export default function AccountVaultUpsertDialog({
                 <FormItem>
                   <FormLabel>Email ID</FormLabel>
                   <FormControl>
-                    <Input placeholder="name@domain.com" autoComplete="email" {...field} />
+                    <Input placeholder="name@domain.com" autoComplete="email" className="min-h-11" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -179,7 +182,7 @@ export default function AccountVaultUpsertDialog({
                 <FormItem>
                   <FormLabel>Username (optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="Optional" {...field} />
+                    <Input placeholder="Optional" className="min-h-11" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -217,17 +220,8 @@ export default function AccountVaultUpsertDialog({
               )}
             />
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={upsert.isPending}>
-                {existing ? "Save" : "Add"}
-              </Button>
-            </DialogFooter>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+    </ResponsiveModal>
   );
 }

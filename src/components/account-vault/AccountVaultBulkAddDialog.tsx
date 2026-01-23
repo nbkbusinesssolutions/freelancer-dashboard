@@ -6,17 +6,11 @@ import { useForm } from "react-hook-form";
 import type { AccountVaultItem, Platform } from "@/lib/types";
 import { useUpsertAccountVault } from "@/hooks/useApiData";
 import { toast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ResponsiveModal } from "@/components/ui/responsive-modal";
 import {
   Form,
   FormControl,
@@ -121,6 +115,7 @@ export default function AccountVaultBulkAddDialog({
   onOpenChange: (open: boolean) => void;
   takenEmails: string[];
 }) {
+  const isMobile = useIsMobile();
   const upsert = useUpsertAccountVault();
   const platforms = useMasterList("nbk.master.platforms", CORE_PLATFORMS);
 
@@ -238,17 +233,30 @@ export default function AccountVaultBulkAddDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>Bulk Add Emails</DialogTitle>
-          <DialogDescription>
-            Paste <span className="font-medium">email,username</span> per line or paste/upload a CSV with headers <span className="font-medium">email,username</span>.
-          </DialogDescription>
-        </DialogHeader>
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+    <ResponsiveModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Bulk Add Emails"
+      description={
+        <>
+          Paste <span className="font-medium">email,username</span> per line or paste/upload a CSV with headers{" "}
+          <span className="font-medium">email,username</span>.
+        </>
+      }
+      contentClassName="max-w-3xl"
+      footer={
+        <>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="min-h-11">
+            Cancel
+          </Button>
+          <Button type="submit" form="account-vault-bulk" disabled={upsert.isPending || parsed.totals.toCreate === 0} className="min-h-11">
+            Add {parsed.totals.toCreate}
+          </Button>
+        </>
+      }
+    >
+      <Form {...form}>
+        <form id="account-vault-bulk" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <FormField
                 control={form.control}
@@ -336,46 +344,85 @@ export default function AccountVaultBulkAddDialog({
                 </div>
 
                 <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Username</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {parsed.rows.slice(0, 8).map((r) => (
-                        <TableRow key={`${r.line}-${r.email}-${r.username}`} className={!r.valid || r.duplicate ? "opacity-70" : undefined}>
-                          <TableCell className="font-medium">{r.email || <span className="text-muted-foreground">(empty)</span>}</TableCell>
-                          <TableCell>{r.username || <span className="text-muted-foreground">—</span>}</TableCell>
-                          <TableCell>
-                            {!r.valid ? (
-                              <Badge variant="destructive">{r.error ?? "Invalid"}</Badge>
-                            ) : r.duplicate ? (
-                              <Badge variant="secondary">Duplicate</Badge>
-                            ) : (
-                              <Badge variant="outline">OK</Badge>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      {parsed.rows.length === 0 && (
+                  {isMobile ? (
+                    <div className="p-3">
+                      <div className="space-y-2">
+                        {parsed.rows.slice(0, 6).map((r) => (
+                          <div
+                            key={`${r.line}-${r.email}-${r.username}`}
+                            className={`rounded-md border p-3 ${!r.valid || r.duplicate ? "opacity-70" : ""}`}
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <div className="text-xs text-muted-foreground">Email</div>
+                                <div className="nbk-break-anywhere text-sm font-medium">
+                                  {r.email || <span className="text-muted-foreground">(empty)</span>}
+                                </div>
+                                <div className="mt-2 text-xs text-muted-foreground">Username</div>
+                                <div className="nbk-break-anywhere text-sm">
+                                  {r.username || <span className="text-muted-foreground">—</span>}
+                                </div>
+                              </div>
+                              <div className="shrink-0">
+                                {!r.valid ? (
+                                  <Badge variant="destructive">{r.error ?? "Invalid"}</Badge>
+                                ) : r.duplicate ? (
+                                  <Badge variant="secondary">Duplicate</Badge>
+                                ) : (
+                                  <Badge variant="outline">OK</Badge>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        {parsed.rows.length === 0 && (
+                          <div className="rounded-md border p-3 text-sm text-muted-foreground">Paste emails to see preview.</div>
+                        )}
+                        {parsed.rows.length > 6 && <div className="text-xs text-muted-foreground">Showing first 6 rows…</div>}
+                      </div>
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
                         <TableRow>
-                          <TableCell colSpan={3} className="text-muted-foreground">
-                            Paste emails to see preview.
-                          </TableCell>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Username</TableHead>
+                          <TableHead>Status</TableHead>
                         </TableRow>
-                      )}
-                      {parsed.rows.length > 8 && (
-                        <TableRow>
-                          <TableCell colSpan={3} className="text-muted-foreground">
-                            Showing first 8 rows…
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {parsed.rows.slice(0, 8).map((r) => (
+                          <TableRow key={`${r.line}-${r.email}-${r.username}`} className={!r.valid || r.duplicate ? "opacity-70" : undefined}>
+                            <TableCell className="font-medium">{r.email || <span className="text-muted-foreground">(empty)</span>}</TableCell>
+                            <TableCell>{r.username || <span className="text-muted-foreground">—</span>}</TableCell>
+                            <TableCell>
+                              {!r.valid ? (
+                                <Badge variant="destructive">{r.error ?? "Invalid"}</Badge>
+                              ) : r.duplicate ? (
+                                <Badge variant="secondary">Duplicate</Badge>
+                              ) : (
+                                <Badge variant="outline">OK</Badge>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        {parsed.rows.length === 0 && (
+                          <TableRow>
+                            <TableCell colSpan={3} className="text-muted-foreground">
+                              Paste emails to see preview.
+                            </TableCell>
+                          </TableRow>
+                        )}
+                        {parsed.rows.length > 8 && (
+                          <TableRow>
+                            <TableCell colSpan={3} className="text-muted-foreground">
+                              Showing first 8 rows…
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  )}
                 </div>
 
                 <div className="rounded-md border p-3">
@@ -384,6 +431,7 @@ export default function AccountVaultBulkAddDialog({
                     <Input
                       type="file"
                       accept=".csv,text/csv"
+                      className="min-h-11"
                       onChange={(e) => {
                         const f = e.target.files?.[0];
                         if (f) void onUploadCsv(f);
@@ -394,19 +442,9 @@ export default function AccountVaultBulkAddDialog({
                 </div>
               </div>
             </div>
-
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={upsert.isPending || parsed.totals.toCreate === 0}>
-                Add {parsed.totals.toCreate}
-              </Button>
-            </DialogFooter>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+    </ResponsiveModal>
   );
 }
 
