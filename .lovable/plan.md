@@ -1,191 +1,253 @@
 
-<context>
-Goal: Make NBK Business Dashboard feel “highly professional”, solve real workflow problems, and work perfectly on mobile—without backend changes (stays at the current API boundary and remains Netlify-ready).
+<context-and-goal>
+You want an agency-grade, daily-use internal control dashboard that is truly mobile-first:
+- No horizontal scrolling on mobile
+- No unreadable/clipped text
+- No misaligned elements
+- All forms usable one-handed
+- Tables must become card-based on mobile
+- Modals must become bottom-sheet drawers on mobile
+- Zero-blocking “creatable” dropdowns everywhere (already started)
 
-Current state (key findings from code):
-- Layout: `AppShell` already uses a responsive sidebar + sticky header and padding (`p-4 md:p-6`).
-- Biggest mobile pain: all main pages rely on dense tables (`Table` is horizontally scrollable, but still not “mobile-first”). Forms open in centered Dialogs which can feel cramped on phones.
-- There’s still a legacy `src/App.css` that looks like a Vite template. It is not currently imported by `main.tsx`, but we should verify no imports exist and keep the project clean.
-- You already have: `useIsMobile()` hook and a `Drawer` component (Vaul) available—perfect for mobile-first edit/create flows.
+You also confirmed:
+- Mobile navigation should keep the current sidebar-on-mobile (sheet) pattern (not bottom nav)
+- Services & Billing Log should be built now
+</context-and-goal>
 
-Plan focuses on: (1) a mobile-first layout pattern across all pages, (2) professional UI consistency, (3) workflow upgrades (drawers, quick actions), (4) safe Netlify SPA hardening.
-</context>
+<what-we-have-now (quick-audit)>
+1) Mobile lists
+- Account Vault: already card-based on mobile.
+- Projects + AI Subscriptions: already card-based on mobile.
+- Dashboard: already uses card sections on mobile.
+This is a strong base.
 
-<success-criteria>
-Mobile:
-- No “pinch/zoom” required for core actions.
-- Tables become readable “cards” on small screens with clear primary actions.
-- Create/Edit actions are comfortable on phones (bottom drawer, sticky action buttons).
-- Header + sidebar are usable; content spacing and typography are consistent.
+2) Biggest remaining mobile blockers (from code review)
+- Account Vault dialogs still use centered <Dialog> (Upsert + Bulk Add). Must become bottom-sheet Drawer via ResponsiveModal.
+- Bulk Add dialog contains a desktop-style table preview that will introduce horizontal scroll risk inside the dialog on small screens.
+- Touch targets: some critical controls are below the 44px minimum:
+  - SidebarTrigger is h-7/w-7 (too small).
+  - Icon-only “+” add button in EmailCombobox is h-10/w-10 (40px) and unlabeled visually.
+- Some page headers (Account Vault) use a horizontal button row on mobile; should become stacked full-width actions for one-hand use.
+- Global “no overflow” hardening is not yet enforced (we should defensively prevent accidental overflow-x).
+- Services & Billing Log doesn’t exist yet (new pages, routes, UI patterns needed, must also be mobile-perfect).
 
-Professional polish:
-- Consistent headings, spacing, empty states, loading states.
-- Clear hierarchy and “scan-friendly” layouts (freelancer ops cockpit vibe).
-- Buttons, badges, and forms feel cohesive and predictable.
-</success-criteria>
+3) Dropdowns
+- CreatableCombobox + EmailCombobox already satisfy the “never block due to missing values” rule for several key fields.
+- Remaining classic <Select> dropdowns (e.g., project status, subscription type) are currently not searchable/creatable. Even if they’re “fixed enums”, your rule says ALL dropdowns must be searchable and allow typing. We’ll standardize them as searchable; for truly-fixed enums we’ll still allow typing but validate/normalize to the nearest valid value or store as “Other” where appropriate.
+</what-we-have-now>
 
-<phase-1_foundation_layout_and_design_system (highest-impact, low-risk)>
-1) Global layout cleanup and responsiveness baseline
-- Audit and remove/stop using any leftover template constraints:
-  - Confirm `App.css` is not imported; if unused, delete or keep but ensure it never affects layout.
-- Ensure the app uses full-width on all devices:
-  - Verify `index.html`/root wrappers don’t constrain width.
-  - Ensure `AppShell` main container remains `w-full` and doesn’t get overridden.
-- Add a small “design system layer” for consistent typography + spacing:
-  - Standardize page header pattern: `h1`, subtext, and right-side actions.
-  - Introduce consistent section spacing (`space-y-6` is already used—keep that standard).
+<implementation-plan (mobile-flawless across the entire app)>
 
-2) Make header actions mobile-safe
-- In `AppShell` header:
-  - Ensure the title truncates nicely (already `truncate`).
-  - Ensure the API button remains accessible (already hides “API” label on small screens).
-  - Consider moving some “secondary” actions into an overflow menu on mobile if needed later.
+<phase-0_mobile-hardening-baseline (global safety rails)>
+Goal: prevent layout breaks before we touch individual pages.
 
-Deliverable: the app feels less “template”, more “product”, and sets the baseline for responsive components.
-</phase-1_foundation_layout_and_design_system>
+0.1 Global overflow guard (mobile)
+- Add CSS to prevent accidental horizontal scroll:
+  - body/root: overflow-x: hidden
+  - media elements: max-width: 100%
+  - long strings: enforce break-words where needed (emails/domains/notes)
+- Add a lightweight “safe layout” utility class strategy:
+  - Ensure common flex containers use min-w-0 on children to prevent overflow.
+  - Audit cards/tables for any “w-[something]” causing overflow.
 
-<phase-2_mobile_first_data_display_tables_to_cards>
-This is the core mobile responsiveness upgrade.
+0.2 Touch target baseline (44px minimum)
+- Ensure all interactive elements meet minimum height/width:
+  - Increase SidebarTrigger size on mobile (h-11 w-11).
+  - Ensure icon buttons in content areas are either:
+    - replaced with labeled full-width buttons on mobile (preferred), OR
+    - increased to h-11 w-11 and paired with visible label text.
+- Verify inputs and combobox triggers are at least h-11 on mobile.
 
-Pattern (recommended):
-- On mobile (<md): replace table rows with stacked “Record Cards”.
-- On desktop (md+): keep tables for fast scanning and density.
+0.3 Typography baseline
+- Standardize heading scaling:
+  - H1: text-xl on mobile, text-2xl on sm+
+  - Body: keep text-sm for secondary, but ensure minimum readability (line-height, spacing).
+- Fix “ugly wraps”:
+  - Emails and domains: allow wrapping with break-words (not truncation-only).
+  - Use truncation only where it is clearly safe (e.g., sidebar labels), otherwise wrap cleanly.
 
-Implementation approach:
-- Create a reusable `ResponsiveList` pattern (component or page-local) that renders:
-  - `Table` for md+ (existing table remains mostly unchanged).
-  - `Card` list for mobile, each card shows:
-    - Primary identifier (bold): email / project name / tool name
-    - Key metadata lines: platform/status, domain, cancel-by, etc.
-    - Actions as large tap targets (edit/delete) aligned consistently.
+Deliverable: at 360px width, the app cannot accidentally overflow horizontally.
+</phase-0_mobile-hardening-baseline>
 
-Apply to:
-1) Account Vault (`/account-vault`)
-- Mobile cards show:
-  - Email (primary)
-  - Platform (secondary)
-  - Active/Inactive badge
-  - Edit + Delete buttons (larger, not tiny icon-only on mobile)
-- Keep search input and “Bulk Add” + “Add Email” actions accessible on mobile (possibly stack vertically with full-width buttons on very small screens).
+<phase-1_account-vault_mobile-perfection (current route)>
+Goal: make Account Vault flawless on mobile including forms.
 
-2) Projects (`/projects`)
-- Mobile cards show:
-  - ProjectName + ClientName
-  - DomainName
-  - Status badge
-  - Quick actions: View/Edit (drawer) and Delete
-- Keep filter status in URL (already exists) and make it easy to apply via a filter UI later.
+1.1 Header actions become one-hand friendly
+- Convert the “Bulk Add / Add Email” action group into a stacked layout on mobile:
+  - Full-width buttons
+  - Primary action emphasized (“Add Email”), secondary below (“Bulk Add”)
 
-3) AI Subscriptions (`/ai-subscriptions`)
-- Mobile cards show:
-  - ToolName + subscription type
-  - Status badge
-  - Cancel-by date
-  - Delete action + “Open details” (drawer) once added in later phases
+1.2 Convert AccountVaultUpsertDialog to ResponsiveModal
+- Replace centered Dialog with ResponsiveModal:
+  - Drawer on mobile with:
+    - max-height (no cutoff)
+    - internal scroll for content
+    - sticky footer buttons (Cancel/Save always reachable)
+- Ensure all fields are full-width, spaced, and thumb-friendly:
+  - Email, Platform (CreatableCombobox), Username, Notes, Active toggle
 
-Deliverable: On phones, the app reads like a modern mobile product, not a desktop table squeezed into a small screen.
-</phase-2_mobile_first_data_display_tables_to_cards>
+1.3 Convert AccountVaultBulkAddDialog to ResponsiveModal + mobile preview redesign
+- On mobile, replace the preview <Table> with:
+  - A stacked “row card” list:
+    - Email (wrap if long)
+    - Username
+    - Status badge
+- Keep desktop preview table for md+.
+- Ensure file upload input and preview sections stack cleanly (single column) on mobile.
 
-<phase-3_mobile_first_forms_dialog_to_drawer>
-Goal: every create/edit flow is comfortable on mobile.
+1.4 EmailCombobox mobile ergonomics
+- Replace/adjust the icon-only “+” add button for mobile:
+  - Either show a labeled “Add” button (preferred) or make it h-11/w-11 and add visible label near it.
+- Ensure the Popover content has:
+  - strong background (already bg-popover) and high z-index (already z-50)
+  - a max height with vertical scroll only
+  - no horizontal overflow
 
-Pattern:
-- Desktop (md+): keep current Dialog (centered modal) for speed.
-- Mobile: use bottom `Drawer` with:
-  - Scrollable content
-  - Sticky footer actions (Cancel/Save)
-  - Full-width inputs and larger spacing
+Deliverable: Account Vault is “phone-native” for daily use.
+</phase-1_account-vault_mobile-perfection>
 
-Implementation approach:
-- Create a reusable “ResponsiveModal” wrapper:
-  - Uses `useIsMobile()` to render either `Dialog` or `Drawer`.
-  - Exposes a consistent API: `open`, `onOpenChange`, `title`, `description`, `children`, and `footer`.
-- Refactor these flows to use it:
-  1) AccountVaultUpsertDialog (Add/Edit email)
-  2) AccountVaultBulkAddDialog (Bulk add)
-  3) Projects create/edit (currently only create in a Dialog)
-  4) AI Subscriptions add/edit (currently only add in a Dialog)
+<phase-2_navigation_mobile-first (keep sidebar, fix usability)>
+Goal: keep your chosen sidebar-on-mobile approach, but make it truly thumb-friendly and non-fragile.
 
-Deliverable: Forms no longer feel cramped on mobile; user can reliably add/edit records on the go.
-</phase-3_mobile_first_forms_dialog_to_drawer>
+2.1 Make the menu trigger thumb-safe
+- Increase SidebarTrigger hit area on mobile (min 44px).
+- Optional: add visible “Menu” label next to icon on mobile header (prevents “tiny icon without label” issue).
 
-<phase-4_projects_workflow_upgrade_drawer_edit_details (your chosen UX)>
-Goal: “freelancer-grade” Projects workflow while staying frontend-only.
+2.2 Mobile sheet sidebar ergonomics
+- Ensure sheet width and internal padding don’t cause text clipping.
+- Ensure close gesture + accessible close are reliable (sheet already supports, but we’ll verify).
 
-1) Add “Edit” action to Projects list
-- Add an edit button per project row/card.
-- Open a Projects Drawer (mobile + desktop) to edit:
-  - Client name, project name, domain, providers, emails, dates, status, notes.
-- Reuse the existing validation schema and `useUpsertProject()` mutation.
+2.3 Header layout safety
+- Confirm header contents never overflow at 360px:
+  - Title truncates cleanly (already truncate)
+  - External API Settings control stays reachable
 
-2) Add “Details” view in drawer
-- Without leaving the list, show a read-only details layout:
-  - Domain provider, domain email, deployment email, key dates, status, notes.
-- From details view, include a prominent “Edit” button.
+Deliverable: navigation works one-handed; no accidental taps; no overflow.
+</phase-2_navigation_mobile-first>
 
-3) Filters and search (mobile-friendly)
-- Add a search input (client/project/domain).
-- Add filter chips for Status on mobile; keep URL query params so filtering is shareable/bookmarkable.
+<phase-3_services-and-billing-log (build now, mobile-first)>
+Goal: add the new module with the same “zero-blocking” rule and mobile-perfect UI.
 
-Deliverable: Projects becomes a workflow tool, not a static list.
-</phase-4_projects_workflow_upgrade_drawer_edit_details>
+3.1 New pages + routes + sidebar items
+- Add:
+  - /services (Services Catalog)
+  - /billing (Client Service Records) OR a single combined /services-billing page (we’ll choose the simplest IA that fits the existing sidebar pattern)
+- Update sidebar order to match workflow priority memory:
+  - Dashboard → Projects → Services & Billing → AI Subscriptions → Account Vault → Settings
 
-<phase-5_dashboard_and_visual_polish>
-1) Dashboard “ops cockpit” layout (mobile-first)
-- Keep existing structure but enhance:
-  - Quick actions row (New Project / Add Subscription / Add Vault Email)
-  - “Attention” section cards (Expired/Expiring soon counts already exist)
-  - Mobile spacing + typography tuning
+3.2 Services Catalog (reusable master list)
+Data model (frontend-only, using the same API boundary approach as the rest of the app):
+- Service:
+  - id
+  - serviceName (creatable, reusable)
+  - serviceType (One-time/Monthly/Yearly) (searchable selector)
+  - defaultPrice (optional)
+  - notes
+  - active/inactive
 
-2) Professional polish checklist across pages
-- Empty states:
-  - Replace “No X yet” with short actionable guidance + a button (e.g., “Add your first email”).
-- Loading states:
-  - Use skeletons in tables/cards while fetching (you already have a `skeleton` component).
-- Consistent badge colors and meaning:
-  - Keep the operational status logic (Expiring Soon/Expired) and ensure consistent variants on all pages.
-- Micro-interactions:
-  - Subtle hover/tap feedback; keep animations minimal and purposeful.
+UX:
+- Mobile: stacked cards with:
+  - Service Name
+  - Type badge
+  - Default price
+  - Active badge
+  - Edit/Delete actions as labeled full-width buttons
+- Desktop: table layout (dense)
+- Add/Edit: ResponsiveModal (Drawer on mobile)
+- “Service Name” uses CreatableCombobox:
+  - typing a new name shows “+ Add new service”
+  - auto-saves to master list and becomes reusable everywhere
 
-Deliverable: The app looks intentional, not assembled—higher trust and better usability.
-</phase-5_dashboard_and_visual_polish>
+3.3 Client Service Records (log)
+Fields:
+- Client (from Projects)
+- Project (existing or “General Service”)
+- Service (from Services Catalog)
+- Service period (one-time/monthly/yearly)
+- Amount charged (defaults from selected service; editable)
+- Payment status
+- Payment mode (manual + reusable)
+- Notes
 
-<phase-6_netlify_deployment_hardening_frontend_only>
-Goal: “Netlify-ready” SPA routing and predictable configuration.
+UX Logic:
+- Selecting a project auto-fills client.
+- Selecting a service auto-fills default price (still editable).
+- Payment mode uses CreatableCombobox + master list:
+  - if missing: “+ Add payment mode”
+- Mobile: card rows with label/value stacks, clear payment badge, quick edit/delete.
+- Desktop: table rows.
 
-- Add Netlify SPA redirect:
-  - Either `public/_redirects` with: `/* /index.html 200`
-  - Or `netlify.toml` with equivalent redirect rules
-- Ensure Settings page clearly explains:
-  - External API Base URL usage
-  - LocalStorage device-only storage (already present)
-- Optional: add a small “Connection Status” indicator:
-  - A non-destructive “ping” request (only if your API supports it; otherwise keep it UI-only).
+Important: since this app currently relies on an external REST API, we will implement this in the same “boundary-safe” way:
+- If the API already supports services/log endpoints, we’ll wire to them.
+- If it does not, we will implement localStorage-backed storage (clearly marked as “local only”) until API endpoints exist, so you can still use it daily without getting blocked.
 
-Deliverable: no broken refresh routes on Netlify; smoother deploy experience.
-</phase-6_netlify_deployment_hardening_frontend_only>
+Deliverable: Services & Billing exists and is fully usable on phone.
+</phase-3_services-and-billing-log>
 
-<testing-and-qa (what we will verify before shipping)>
-Mobile testing (use the device preview toggle):
-- Account Vault: search, add, bulk add, edit, delete on phone widths
-- Projects: create, edit, delete; drawer open/close; form validation visibility
-- AI Subscriptions: add/delete; status badges readable; no horizontal overflow
-- Sidebar: open/close on mobile; navigation works; header stays usable
-- Accessibility basics: focus trapping in modals/drawers, visible focus states, tap target sizes
+<phase-4_finish-the-last-mobile-UX-gaps (strict checklist)>
+Goal: ensure the strict requirements are consistently met everywhere.
 
-Regression testing:
-- Ensure desktop table layouts remain unchanged or improved (no loss of density).
-- Confirm API boundary remains the same (no endpoint changes).
-</testing-and-qa>
+4.1 Replace remaining non-searchable selects
+- Convert remaining <Select> fields to searchable controls:
+  - Project Status
+  - Subscription Type
+  - Payment Status (new)
+  - Service Type (new)
+Even if values are “standard”, we’ll keep search and typing consistent (zero mental load and consistent muscle memory).
 
-<estimated-scope-and-sequencing>
-To keep changes safe and high quality, we’ll implement in this order:
-1) Foundation + layout cleanup
-2) Mobile card layouts (Account Vault first since you’re currently on it)
-3) Responsive modals (Dialog → Drawer on mobile)
-4) Projects drawer edit/details (your requested UX)
-5) Remaining page polish + skeleton/empty states
-6) Netlify SPA redirect hardening
+4.2 Remove any remaining “icon-only” actions on mobile
+- Replace with labeled buttons or add labels + enlarge hit areas.
 
-This sequencing ensures mobile usability improves immediately (starting on your current route), while deeper workflow upgrades remain consistent and reusable.
-</estimated-scope-and-sequencing>
+4.3 Loading, empty states, and inline validation
+- Ensure each list shows:
+  - Loading skeletons (mobile + desktop)
+  - Empty states with guidance + CTA button
+- Ensure validation errors are visible without scrolling surprises in drawers.
+
+4.4 Popover/combobox stability on mobile
+- Ensure popovers are:
+  - not transparent (already OK)
+  - high z-index (already OK)
+  - constrained height and scrollable vertically only
+
+Deliverable: no “rough edges” remain; everything feels intentional and professional.
+</phase-4_finish-the-last-mobile-UX-gaps>
+
+<responsiveness-validation (required widths)>
+We will validate and fix issues at:
+- 360px
+- 390px
+- 414px
+
+Validation checklist per page:
+- No horizontal scroll (page-level and inside drawers/popovers)
+- Header doesn’t wrap awkwardly
+- Buttons are >= 44px tall
+- Text is readable and not clipped
+- No two-column layouts on mobile (md:grid-cols-2 sections already collapse to single column; we’ll ensure any exceptions are removed)
+- Drawers never cut off content; footer actions always reachable
+</responsiveness-validation>
+
+<sequencing (to ship safely without regressions)>
+1) Global baseline hardening (overflow-x, touch targets, typography)
+2) Account Vault dialogs + bulk preview mobile redesign (highest current impact)
+3) Sidebar trigger + header mobile ergonomics
+4) Build Services & Billing module (mobile-first from day 1)
+5) Replace remaining Selects with searchable/consistent patterns + final QA pass at 360/390/414
+
+This approach ensures the app becomes “daily-usable on phone” immediately and stays consistent as we add Services.
+</sequencing>
+
+<technical-notes (implementation details we will follow)>
+- Use existing patterns:
+  - useIsMobile()
+  - ResponsiveModal (Drawer on mobile, Dialog on desktop) — we will enhance it for scroll + sticky actions.
+  - CreatableCombobox + useMasterList for “never block on missing values”.
+  - Mobile lists render Cards; desktop renders Tables.
+- Avoid introducing horizontal scrolling:
+  - On mobile, do not render <Table> anywhere (including inside dialogs).
+  - Ensure long values use break-words instead of fixed widths.
+- Keep the app fast:
+  - Reuse React Query caches where possible.
+  - Keep components simple; no heavy animation.
+</technical-notes>
