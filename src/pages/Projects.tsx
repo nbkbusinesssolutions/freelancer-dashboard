@@ -23,18 +23,24 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import EmailCombobox from "@/components/account-vault/EmailCombobox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 import { CreatableCombobox } from "@/components/ui/creatable-combobox";
-import { useMasterList } from "@/hooks/useMasterList";
 import { ResponsiveModal } from "@/components/ui/responsive-modal";
 import ProjectsList from "@/components/projects/ProjectsList";
+
+function uniqCaseInsensitive(values: string[]) {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const v of values) {
+    const n = String(v ?? "").trim();
+    if (!n) continue;
+    const key = n.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(n);
+  }
+  return out;
+}
 
 const STATUSES: ProjectStatus[] = ["Active", "Completed", "On Hold"];
 
@@ -81,8 +87,9 @@ export default function ProjectsPage() {
 
   const vault = vaultQ.data?.items ?? [];
 
-  const domainProviders = useMasterList("nbk.master.domainProviders", ["Namecheap", "GoDaddy"]);
-  const hostingPlatforms = useMasterList("nbk.master.hostingPlatforms", ["Netlify"]);
+  const hostingPlatformOptions = React.useMemo(() => {
+    return uniqCaseInsensitive(["Netlify", ...items.map((p) => p.hostingPlatform)]).sort((a, b) => a.localeCompare(b));
+  }, [items]);
 
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
@@ -113,11 +120,6 @@ export default function ProjectsPage() {
   }, [domainPurchaseDate, form]);
 
   async function onSubmit(values: z.infer<typeof schema>) {
-    if (values.domainProvider === "Other" && values.domainProviderOther?.trim()) {
-      domainProviders.addItem(values.domainProviderOther.trim());
-    }
-    if (values.hostingPlatform.trim()) hostingPlatforms.addItem(values.hostingPlatform.trim());
-
     try {
       await upsert.mutateAsync({
         clientName: values.clientName,
@@ -260,12 +262,11 @@ export default function ProjectsPage() {
                               form.setValue("domainProvider", core, { shouldDirty: true, shouldValidate: true });
                               form.setValue("domainProviderOther", "", { shouldDirty: true, shouldValidate: true });
                             } else {
-                              domainProviders.addItem(name);
                               form.setValue("domainProvider", "Other", { shouldDirty: true, shouldValidate: true });
                               form.setValue("domainProviderOther", name, { shouldDirty: true, shouldValidate: true });
                             }
                           }}
-                          options={[...domainProviders.items, "Other"]}
+                          options={["Namecheap", "GoDaddy"]}
                           placeholder="Select or type a provider…"
                           searchPlaceholder="Search providers…"
                           addLabel={(v) => `+ Add provider: ${v}`}
@@ -331,11 +332,8 @@ export default function ProjectsPage() {
                       <FormControl>
                         <CreatableCombobox
                           value={field.value}
-                          onChange={(v) => {
-                            field.onChange(v);
-                            if (v.trim()) hostingPlatforms.addItem(v.trim());
-                          }}
-                          options={hostingPlatforms.items}
+                          onChange={field.onChange}
+                          options={hostingPlatformOptions}
                           placeholder="Type a hosting platform…"
                           searchPlaceholder="Search hosting platforms…"
                           addLabel={(v) => `+ Add hosting platform: ${v}`}
@@ -411,20 +409,20 @@ export default function ProjectsPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Project Status</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {STATUSES.map((s) => (
-                            <SelectItem key={s} value={s}>
-                              {s}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <CreatableCombobox
+                          value={field.value}
+                          onChange={(v) => {
+                            const match = STATUSES.find((s) => s.toLowerCase() === v.trim().toLowerCase());
+                            if (match) field.onChange(match);
+                          }}
+                          options={STATUSES}
+                          placeholder="Select status…"
+                          searchPlaceholder="Search status…"
+                          addLabel={() => "Select one of the standard project status values"}
+                          className="min-h-11"
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

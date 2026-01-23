@@ -22,7 +22,6 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 
 import { CreatableCombobox } from "@/components/ui/creatable-combobox";
-import { useMasterList } from "@/hooks/useMasterList";
 
 const CORE_PLATFORMS: Exclude<Platform, "Other">[] = [
   "Gmail",
@@ -58,7 +57,6 @@ export default function AccountVaultUpsertDialog({
   onCreated?: (created: AccountVaultItem) => void;
 }) {
   const upsert = useUpsertAccountVault();
-  const platforms = useMasterList("nbk.master.platforms", CORE_PLATFORMS);
 
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
@@ -93,7 +91,6 @@ export default function AccountVaultUpsertDialog({
     }
 
     const platformName = values.platformName.trim();
-    if (platformName) platforms.addItem(platformName);
     const isCorePlatform = CORE_PLATFORMS.some((p) => p.toLowerCase() === platformName.toLowerCase());
     const platform: Platform = isCorePlatform ? (CORE_PLATFORMS.find((p) => p.toLowerCase() === platformName.toLowerCase()) as Platform) : "Other";
     const platformOther = isCorePlatform ? null : platformName;
@@ -164,7 +161,7 @@ export default function AccountVaultUpsertDialog({
                     <CreatableCombobox
                       value={field.value}
                       onChange={field.onChange}
-                      options={platforms.items}
+                      options={CORE_PLATFORMS}
                       placeholder="Select or type a platform…"
                       searchPlaceholder="Search platform…"
                       addLabel={(v) => `+ Add platform: ${v}`}
