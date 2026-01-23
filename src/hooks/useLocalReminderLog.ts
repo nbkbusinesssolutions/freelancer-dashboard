@@ -1,4 +1,6 @@
-type ReminderStage = 7 | 3 | 1 | 0;
+// Reminder stages represent the “ladder” thresholds (days left) plus an overdue marker.
+// -1 = overdue (past the date)
+type ReminderStage = 30 | 14 | 7 | 3 | 1 | 0 | -1;
 type ReminderKey = string; // `${type}:${id}:${stage}`
 
 const STORAGE_KEY = "mvp:reminders:v1";

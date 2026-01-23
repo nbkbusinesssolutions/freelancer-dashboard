@@ -8,6 +8,7 @@ import { useSearchParams } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { useAccountVault, useDeleteProject, useProjects, useUpsertProject } from "@/hooks/useApiData";
 import type { ProjectItem, ProjectStatus } from "@/lib/types";
+import { computeDateExpiry } from "@/lib/dateExpiry";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,7 +48,9 @@ const schema = z.object({
   hostingPlatform: z.string().trim().min(1).max(50).default("Netlify"),
   deploymentEmailId: z.string().min(1, "Select a deployment email"),
   domainPurchaseDate: z.string().optional(),
+  domainRenewalDate: z.string().optional(),
   hostingStartDate: z.string().optional(),
+  hostingRenewalDate: z.string().optional(),
   status: z.enum(STATUSES as [ProjectStatus, ...ProjectStatus[]]),
   notes: z.string().trim().max(2000).optional(),
 });
@@ -55,6 +58,7 @@ const schema = z.object({
 export default function ProjectsPage() {
   const [params] = useSearchParams();
   const filterStatus = (params.get("status") as ProjectStatus | null) ?? null;
+  const filterRenewal = (params.get("renewal") as "domain" | "hosting" | "overdue" | null) ?? null;
 
   const vaultQ = useAccountVault();
   const projectsQ = useProjects();
@@ -63,7 +67,17 @@ export default function ProjectsPage() {
 
   const [open, setOpen] = React.useState(false);
   const items = projectsQ.data?.items ?? [];
-  const filtered = filterStatus ? items.filter((p) => p.status === filterStatus) : items;
+  const filtered = items.filter((p) => {
+    if (filterStatus && p.status !== filterStatus) return false;
+    if (!filterRenewal) return true;
+
+    const domain = computeDateExpiry(p.domainRenewalDate, 30);
+    const hosting = computeDateExpiry(p.hostingRenewalDate, 30);
+    if (filterRenewal === "domain") return domain ? domain.status !== "Active" : false;
+    if (filterRenewal === "hosting") return hosting ? hosting.status !== "Active" : false;
+    // overdue
+    return (domain?.daysLeft ?? 9999) < 0 || (hosting?.daysLeft ?? 9999) < 0;
+  });
 
   const vault = vaultQ.data?.items ?? [];
 
@@ -82,7 +96,9 @@ export default function ProjectsPage() {
       hostingPlatform: "Netlify",
       deploymentEmailId: "",
       domainPurchaseDate: "",
+      domainRenewalDate: "",
       hostingStartDate: "",
+      hostingRenewalDate: "",
       status: "Active",
       notes: "",
     },
@@ -113,7 +129,9 @@ export default function ProjectsPage() {
         hostingPlatform: values.hostingPlatform,
         deploymentEmailId: values.deploymentEmailId,
         domainPurchaseDate: values.domainPurchaseDate || null,
+        domainRenewalDate: values.domainRenewalDate || null,
         hostingStartDate: values.hostingStartDate || values.domainPurchaseDate || null,
+        hostingRenewalDate: values.hostingRenewalDate || null,
         status: values.status,
         notes: values.notes?.trim() || null,
       });
@@ -342,6 +360,19 @@ export default function ProjectsPage() {
                 />
                 <FormField
                   control={form.control}
+                  name="domainRenewalDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Domain Renewal Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
                   name="hostingStartDate"
                   render={({ field }) => (
                     <FormItem>
@@ -353,6 +384,24 @@ export default function ProjectsPage() {
                     </FormItem>
                   )}
                 />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <div className="hidden md:block" />
+                <FormField
+                  control={form.control}
+                  name="hostingRenewalDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Hosting Renewal Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="hidden md:block" />
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

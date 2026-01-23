@@ -1,9 +1,18 @@
+import * as React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { formatISO } from "date-fns";
 
 import { useAISubscriptions, useProjects } from "@/hooks/useApiData";
 import { computeSubscriptionStatus, getDaysLeft } from "@/lib/subscriptionStatus";
 import { hasShownReminder, markReminderShown, type ReminderStage } from "@/hooks/useLocalReminderLog";
+import {
+  computeDateExpiry,
+  DEFAULT_REMINDER_THRESHOLDS,
+  matchReminderStage,
+  stageLabel as dateStageLabel,
+  stagePriority,
+  type DateReminderStage,
+} from "@/lib/dateExpiry";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,8 +23,8 @@ import DashboardAttentionPanel from "@/components/dashboard/DashboardAttentionPa
 import DashboardKpiGrid, { type DashboardKpi } from "@/components/dashboard/DashboardKpiGrid";
 
 function stageLabel(stage: ReminderStage) {
-  if (stage === 0) return "Expired";
-  return `${stage} day reminder`;
+  // Back-compat helper for AI reminder stages.
+  return dateStageLabel(stage as unknown as DateReminderStage);
 }
 
 export default function DashboardPage() {
@@ -47,22 +56,144 @@ export default function DashboardPage() {
       status: s.status as "Active" | "Expiring Soon" | "Expired",
     }));
 
+  const domainUpcoming30 = projects
+    .map((p) => {
+      const exp = computeDateExpiry(p.domainRenewalDate, 30);
+      if (!exp) return null;
+      if (exp.daysLeft > 30) return null;
+      return {
+        id: p.id,
+        toolName: `${p.clientName} — ${p.domainName}`,
+        daysLeft: exp.daysLeft,
+        status: exp.status,
+      } as const;
+    })
+    .filter(Boolean)
+    .sort((a, b) => (a!.daysLeft ?? 9999) - (b!.daysLeft ?? 9999)) as Array<{
+    id: string;
+    toolName: string;
+    daysLeft: number;
+    status: "Active" | "Expiring Soon" | "Expired";
+  }>;
+
+  const hostingUpcoming30 = projects
+    .map((p) => {
+      const exp = computeDateExpiry(p.hostingRenewalDate, 30);
+      if (!exp) return null;
+      if (exp.daysLeft > 30) return null;
+      return {
+        id: p.id,
+        toolName: `${p.clientName} — ${p.projectName}`,
+        daysLeft: exp.daysLeft,
+        status: exp.status,
+      } as const;
+    })
+    .filter(Boolean)
+    .sort((a, b) => (a!.daysLeft ?? 9999) - (b!.daysLeft ?? 9999)) as Array<{
+    id: string;
+    toolName: string;
+    daysLeft: number;
+    status: "Active" | "Expiring Soon" | "Expired";
+  }>;
+
   // Local-only reminders (per-device) – shown once per stage per day.
   const todayIso = formatISO(new Date(), { representation: "date" });
-  const reminderStages: ReminderStage[] = [7, 3, 1, 0];
-  const reminderHit = computedSubs
-    .flatMap((s) => {
-      if (!s.cancelByDate || s.manualStatus === "Cancelled") return [];
-      const days = s.daysLeft;
-      if (days === null) return [];
+  const reminderCandidates: Array<{
+    stage: DateReminderStage;
+    key: string;
+    title: string;
+    dateIso?: string;
+    onReview: () => void;
+  }> = [];
 
-      const stage = reminderStages.find((st) => (st === 0 ? days < 0 : days === st));
-      if (!stage) return [];
-      const key = `ai:${s.id}:${stage}`;
-      if (hasShownReminder(key, todayIso)) return [];
-      return [{ sub: s, stage, key }];
-    })
-    .sort((a, b) => a.stage - b.stage)[0];
+  // AI
+  computedSubs.forEach((s) => {
+    if (!s.cancelByDate || s.manualStatus === "Cancelled") return;
+    if (s.daysLeft === null) return;
+    const stage = matchReminderStage(s.daysLeft, DEFAULT_REMINDER_THRESHOLDS);
+    if (!stage) return;
+    const key = `ai:${s.id}:${stage}`;
+    if (hasShownReminder(key, todayIso)) return;
+    reminderCandidates.push({
+      stage,
+      key,
+      title: `AI — ${s.toolName}`,
+      dateIso: s.cancelByDate ?? undefined,
+      onReview: () => navigate(`/ai-subscriptions?focus=${encodeURIComponent(s.id)}`),
+    });
+  });
+
+  // Projects: domain + hosting
+  projects.forEach((p) => {
+    const domain = p.domainRenewalDate ? getDaysLeft(p.domainRenewalDate) : null;
+    if (domain !== null) {
+      const stage = matchReminderStage(domain, DEFAULT_REMINDER_THRESHOLDS);
+      if (stage) {
+        const key = `domain:${p.id}:${stage}`;
+        if (!hasShownReminder(key, todayIso)) {
+          reminderCandidates.push({
+            stage,
+            key,
+            title: `Domain — ${p.clientName} • ${p.domainName}`,
+            dateIso: p.domainRenewalDate ?? undefined,
+            onReview: () => navigate(`/projects?renewal=domain`),
+          });
+        }
+      }
+    }
+
+    const hosting = p.hostingRenewalDate ? getDaysLeft(p.hostingRenewalDate) : null;
+    if (hosting !== null) {
+      const stage = matchReminderStage(hosting, DEFAULT_REMINDER_THRESHOLDS);
+      if (stage) {
+        const key = `hosting:${p.id}:${stage}`;
+        if (!hasShownReminder(key, todayIso)) {
+          reminderCandidates.push({
+            stage,
+            key,
+            title: `Hosting — ${p.clientName} • ${p.projectName}`,
+            dateIso: p.hostingRenewalDate ?? undefined,
+            onReview: () => navigate(`/projects?renewal=hosting`),
+          });
+        }
+      }
+    }
+  });
+
+  const reminderHit = reminderCandidates.sort((a, b) => stagePriority(a.stage) - stagePriority(b.stage))[0];
+
+  // Local notifications (no backend): only when app is open.
+  // We request permission only when we actually have a reminder to show.
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  React.useEffect(() => {
+    if (!reminderHit) return;
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+
+    const show = () => {
+      try {
+        new Notification(`Reminder: ${dateStageLabel(reminderHit.stage)}`, {
+          body: reminderHit.title,
+        });
+      } catch {
+        // ignore
+      }
+    };
+
+    if (Notification.permission === "granted") {
+      show();
+      markReminderShown(reminderHit.key, todayIso);
+      return;
+    }
+
+    if (Notification.permission === "default") {
+      Notification.requestPermission().then((perm) => {
+        if (perm === "granted") {
+          show();
+          markReminderShown(reminderHit.key, todayIso);
+        }
+      });
+    }
+  }, [reminderHit, todayIso]);
 
   const kpis: DashboardKpi[] = [
     {
@@ -116,17 +247,19 @@ export default function DashboardPage() {
         reminder={
           reminderHit
             ? {
-                stageLabel: stageLabel(reminderHit.stage),
-                toolName: reminderHit.sub.toolName,
-                cancelByDate: reminderHit.sub.cancelByDate ?? undefined,
+                stageLabel: stageLabel(reminderHit.stage as unknown as ReminderStage),
+                toolName: reminderHit.title,
+                cancelByDate: reminderHit.dateIso,
                 onReview: () => {
                   markReminderShown(reminderHit.key, todayIso);
-                  navigate(`/ai-subscriptions?focus=${encodeURIComponent(reminderHit.sub.id)}`);
+                  reminderHit.onReview();
                 },
               }
             : null
         }
-        upcoming={upcoming7}
+        upcomingAi={upcoming7}
+        upcomingDomains={domainUpcoming30}
+        upcomingHosting={hostingUpcoming30}
       />
 
       <DashboardKpiGrid items={kpis} />
