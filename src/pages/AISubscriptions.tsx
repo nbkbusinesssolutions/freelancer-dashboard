@@ -23,19 +23,25 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import EmailCombobox from "@/components/account-vault/EmailCombobox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 
 import { CreatableCombobox } from "@/components/ui/creatable-combobox";
-import { useMasterList } from "@/hooks/useMasterList";
 import { ResponsiveModal } from "@/components/ui/responsive-modal";
 import AISubscriptionsList from "@/components/ai-subscriptions/AISubscriptionsList";
+
+function uniqCaseInsensitive(values: string[]) {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const v of values) {
+    const n = String(v ?? "").trim();
+    if (!n) continue;
+    const key = n.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(n);
+  }
+  return out;
+}
 
 const CORE_PLATFORMS: Exclude<Platform, "Other">[] = [
   "Gmail",
@@ -72,8 +78,15 @@ export default function AISubscriptionsPage() {
   const del = useDeleteAISubscription();
   const vault = vaultQ.data?.items ?? [];
 
-  const platforms = useMasterList("nbk.master.platforms", CORE_PLATFORMS);
-  const toolHistory = useMasterList("nbk.master.aiTools", []);
+  const platformOptions = React.useMemo(() => {
+    const existing = (q.data?.items ?? []).map((s) => (s.platform === "Other" ? s.platformOther : s.platform) ?? "");
+    return uniqCaseInsensitive([...CORE_PLATFORMS, ...existing]).sort((a, b) => a.localeCompare(b));
+  }, [q.data?.items]);
+
+  const toolOptions = React.useMemo(() => {
+    const existing = (q.data?.items ?? []).map((s) => s.toolName);
+    return uniqCaseInsensitive(existing).sort((a, b) => a.localeCompare(b));
+  }, [q.data?.items]);
 
   const [open, setOpen] = React.useState(false);
 
@@ -104,9 +117,6 @@ export default function AISubscriptionsPage() {
 
   async function onSubmit(values: z.infer<typeof schema>) {
     const platformName = values.platformName.trim();
-    if (platformName) platforms.addItem(platformName);
-    if (values.toolName.trim()) toolHistory.addItem(values.toolName.trim());
-
     const isCorePlatform = CORE_PLATFORMS.some((p) => p.toLowerCase() === platformName.toLowerCase());
     const platform: Platform = isCorePlatform
       ? (CORE_PLATFORMS.find((p) => p.toLowerCase() === platformName.toLowerCase()) as Platform)
@@ -197,7 +207,7 @@ export default function AISubscriptionsPage() {
                         <CreatableCombobox
                           value={field.value}
                           onChange={field.onChange}
-                          options={[...toolHistory.items, ...Array.from(new Set(items.map((i) => i.toolName))).sort()]}
+                          options={toolOptions}
                           placeholder="Type a tool name…"
                           searchPlaceholder="Search tool history…"
                           addLabel={(v) => `+ Add tool: ${v}`}
@@ -213,20 +223,20 @@ export default function AISubscriptionsPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Subscription Type</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {TYPES.map((t) => (
-                            <SelectItem key={t} value={t}>
-                              {t}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <CreatableCombobox
+                          value={field.value}
+                          onChange={(v) => {
+                            const match = TYPES.find((t) => t.toLowerCase() === v.trim().toLowerCase());
+                            if (match) field.onChange(match);
+                          }}
+                          options={TYPES}
+                          placeholder="Select type…"
+                          searchPlaceholder="Search types…"
+                          addLabel={() => "Select one of the standard subscription type values"}
+                          className="min-h-11"
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -244,7 +254,7 @@ export default function AISubscriptionsPage() {
                         <CreatableCombobox
                           value={field.value}
                           onChange={field.onChange}
-                          options={platforms.items}
+                          options={platformOptions}
                           placeholder="Select or type a platform…"
                           searchPlaceholder="Search platform…"
                           addLabel={(v) => `+ Add platform: ${v}`}
