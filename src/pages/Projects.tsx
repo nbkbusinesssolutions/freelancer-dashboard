@@ -40,6 +40,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+import { CreatableCombobox } from "@/components/ui/creatable-combobox";
+import { useMasterList } from "@/hooks/useMasterList";
+
 const STATUSES: ProjectStatus[] = ["Active", "Completed", "On Hold"];
 
 const schema = z.object({
@@ -72,6 +75,9 @@ export default function ProjectsPage() {
 
   const vault = vaultQ.data?.items ?? [];
 
+  const domainProviders = useMasterList("nbk.master.domainProviders", ["Namecheap", "GoDaddy"]);
+  const hostingPlatforms = useMasterList("nbk.master.hostingPlatforms", ["Netlify"]);
+
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -99,6 +105,11 @@ export default function ProjectsPage() {
   }, [domainPurchaseDate, form]);
 
   async function onSubmit(values: z.infer<typeof schema>) {
+    if (values.domainProvider === "Other" && values.domainProviderOther?.trim()) {
+      domainProviders.addItem(values.domainProviderOther.trim());
+    }
+    if (values.hostingPlatform.trim()) hostingPlatforms.addItem(values.hostingPlatform.trim());
+
     try {
       await upsert.mutateAsync({
         clientName: values.clientName,
@@ -250,18 +261,33 @@ export default function ProjectsPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Domain Provider</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Namecheap">Namecheap</SelectItem>
-                          <SelectItem value="GoDaddy">GoDaddy</SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <CreatableCombobox
+                          value={
+                            form.watch("domainProvider") === "Other"
+                              ? form.watch("domainProviderOther") || ""
+                              : form.watch("domainProvider")
+                          }
+                          onChange={(v) => {
+                            const name = v.trim();
+                            if (!name) return;
+                            const isCore = ["Namecheap", "GoDaddy"].some((p) => p.toLowerCase() === name.toLowerCase());
+                            if (isCore) {
+                              const core = (["Namecheap", "GoDaddy"] as const).find((p) => p.toLowerCase() === name.toLowerCase())!;
+                              form.setValue("domainProvider", core, { shouldDirty: true, shouldValidate: true });
+                              form.setValue("domainProviderOther", "", { shouldDirty: true, shouldValidate: true });
+                            } else {
+                              domainProviders.addItem(name);
+                              form.setValue("domainProvider", "Other", { shouldDirty: true, shouldValidate: true });
+                              form.setValue("domainProviderOther", name, { shouldDirty: true, shouldValidate: true });
+                            }
+                          }}
+                          options={[...domainProviders.items, "Other"]}
+                          placeholder="Select or type a provider…"
+                          searchPlaceholder="Search providers…"
+                          addLabel={(v) => `+ Add provider: ${v}`}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -320,7 +346,17 @@ export default function ProjectsPage() {
                     <FormItem>
                       <FormLabel>Hosting Platform</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <CreatableCombobox
+                          value={field.value}
+                          onChange={(v) => {
+                            field.onChange(v);
+                            if (v.trim()) hostingPlatforms.addItem(v.trim());
+                          }}
+                          options={hostingPlatforms.items}
+                          placeholder="Type a hosting platform…"
+                          searchPlaceholder="Search hosting platforms…"
+                          addLabel={(v) => `+ Add hosting platform: ${v}`}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

@@ -25,22 +25,25 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 
-const PLATFORMS: Platform[] = ["Gmail", "Namecheap", "GoDaddy", "Netlify", "Cursor", "Lovable", "Replit", "Other"];
+import { CreatableCombobox } from "@/components/ui/creatable-combobox";
+import { useMasterList } from "@/hooks/useMasterList";
+
+const CORE_PLATFORMS: Exclude<Platform, "Other">[] = [
+  "Gmail",
+  "Namecheap",
+  "GoDaddy",
+  "Netlify",
+  "Cursor",
+  "Lovable",
+  "Replit",
+];
 
 const schema = z.object({
   email: z.string().trim().email("Enter a valid email").max(255),
-  platform: z.enum(PLATFORMS as [Platform, ...Platform[]]),
-  platformOther: z.string().trim().max(50).optional(),
+  platformName: z.string().trim().min(1, "Select or type a platform").max(50),
   username: z.string().trim().max(100).optional(),
   notes: z.string().trim().max(1000).optional(),
   isActive: z.boolean().default(true),
@@ -62,13 +65,14 @@ export default function AccountVaultUpsertDialog({
   onCreated?: (created: AccountVaultItem) => void;
 }) {
   const upsert = useUpsertAccountVault();
+  const platforms = useMasterList("nbk.master.platforms", CORE_PLATFORMS);
 
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: {
       email: existing?.email ?? initialEmail ?? "",
-      platform: existing?.platform ?? "Gmail",
-      platformOther: existing?.platformOther ?? "",
+      platformName:
+        existing?.platform === "Other" ? (existing.platformOther ?? "Other") : (existing?.platform ?? "Gmail"),
       username: existing?.username ?? "",
       notes: existing?.notes ?? "",
       isActive: existing?.isActive ?? true,
@@ -79,15 +83,13 @@ export default function AccountVaultUpsertDialog({
     if (!open) return;
     form.reset({
       email: existing?.email ?? initialEmail ?? "",
-      platform: existing?.platform ?? "Gmail",
-      platformOther: existing?.platformOther ?? "",
+      platformName:
+        existing?.platform === "Other" ? (existing.platformOther ?? "Other") : (existing?.platform ?? "Gmail"),
       username: existing?.username ?? "",
       notes: existing?.notes ?? "",
       isActive: existing?.isActive ?? true,
     });
   }, [open, existing, initialEmail, form]);
-
-  const watchedPlatform = form.watch("platform");
 
   async function onSubmit(values: z.infer<typeof schema>) {
     const normalized = values.email.trim().toLowerCase();
@@ -97,12 +99,18 @@ export default function AccountVaultUpsertDialog({
       return;
     }
 
+    const platformName = values.platformName.trim();
+    if (platformName) platforms.addItem(platformName);
+    const isCorePlatform = CORE_PLATFORMS.some((p) => p.toLowerCase() === platformName.toLowerCase());
+    const platform: Platform = isCorePlatform ? (CORE_PLATFORMS.find((p) => p.toLowerCase() === platformName.toLowerCase()) as Platform) : "Other";
+    const platformOther = isCorePlatform ? null : platformName;
+
     try {
       const created = await upsert.mutateAsync({
         id: existing?.id,
         email: values.email.trim(),
-        platform: values.platform,
-        platformOther: values.platform === "Other" ? (values.platformOther?.trim() || null) : null,
+        platform,
+        platformOther,
         username: values.username?.trim() || null,
         notes: values.notes?.trim() || null,
         isActive: values.isActive,
@@ -143,48 +151,26 @@ export default function AccountVaultUpsertDialog({
               )}
             />
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="platform"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Platform</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select platform" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {PLATFORMS.map((p) => (
-                          <SelectItem key={p} value={p}>
-                            {p}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {watchedPlatform === "Other" && (
-                <FormField
-                  control={form.control}
-                  name="platformOther"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Other platform</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter Platform Name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            <FormField
+              control={form.control}
+              name="platformName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Platform</FormLabel>
+                  <FormControl>
+                    <CreatableCombobox
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={platforms.items}
+                      placeholder="Select or type a platform…"
+                      searchPlaceholder="Search platform…"
+                      addLabel={(v) => `+ Add platform: ${v}`}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-            </div>
+            />
 
             <FormField
               control={form.control}

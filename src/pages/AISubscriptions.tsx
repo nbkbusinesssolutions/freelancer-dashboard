@@ -42,13 +42,23 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 
-const PLATFORMS: Platform[] = ["Gmail", "Namecheap", "GoDaddy", "Netlify", "Cursor", "Lovable", "Replit", "Other"];
+import { CreatableCombobox } from "@/components/ui/creatable-combobox";
+import { useMasterList } from "@/hooks/useMasterList";
+
+const CORE_PLATFORMS: Exclude<Platform, "Other">[] = [
+  "Gmail",
+  "Namecheap",
+  "GoDaddy",
+  "Netlify",
+  "Cursor",
+  "Lovable",
+  "Replit",
+];
 const TYPES: SubscriptionType[] = ["Free Trial", "Paid"];
 
 const schema = z.object({
   toolName: z.string().trim().min(1).max(100),
-  platform: z.enum(PLATFORMS as [Platform, ...Platform[]]),
-  platformOther: z.string().trim().max(50).optional(),
+  platformName: z.string().trim().min(1, "Select or type a platform").max(50),
   emailId: z.string().min(1, "Select an email"),
   password: z.string().trim().max(200).optional(),
   subscriptionType: z.enum(TYPES as [SubscriptionType, ...SubscriptionType[]]),
@@ -70,6 +80,9 @@ export default function AISubscriptionsPage() {
   const del = useDeleteAISubscription();
   const vault = vaultQ.data?.items ?? [];
 
+  const platforms = useMasterList("nbk.master.platforms", CORE_PLATFORMS);
+  const toolHistory = useMasterList("nbk.master.aiTools", []);
+
   const [open, setOpen] = React.useState(false);
 
   const items = (q.data?.items ?? []).map((s) => ({ ...s, computedStatus: computeSubscriptionStatus(s) }));
@@ -85,8 +98,7 @@ export default function AISubscriptionsPage() {
     resolver: zodResolver(schema),
     defaultValues: {
       toolName: "",
-      platform: "Other",
-      platformOther: "",
+      platformName: "Netlify",
       emailId: "",
       password: "",
       subscriptionType: "Free Trial",
@@ -99,11 +111,21 @@ export default function AISubscriptionsPage() {
   });
 
   async function onSubmit(values: z.infer<typeof schema>) {
+    const platformName = values.platformName.trim();
+    if (platformName) platforms.addItem(platformName);
+    if (values.toolName.trim()) toolHistory.addItem(values.toolName.trim());
+
+    const isCorePlatform = CORE_PLATFORMS.some((p) => p.toLowerCase() === platformName.toLowerCase());
+    const platform: Platform = isCorePlatform
+      ? (CORE_PLATFORMS.find((p) => p.toLowerCase() === platformName.toLowerCase()) as Platform)
+      : "Other";
+    const platformOther = isCorePlatform ? null : platformName;
+
     try {
       await upsert.mutateAsync({
         toolName: values.toolName,
-        platform: values.platform,
-        platformOther: values.platform === "Other" ? (values.platformOther?.trim() || null) : null,
+        platform,
+        platformOther,
         emailId: values.emailId,
         password: values.password?.trim() || null,
         subscriptionType: values.subscriptionType,
@@ -219,7 +241,14 @@ export default function AISubscriptionsPage() {
                     <FormItem>
                       <FormLabel>AI Tool Name</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <CreatableCombobox
+                          value={field.value}
+                          onChange={field.onChange}
+                          options={[...toolHistory.items, ...Array.from(new Set(items.map((i) => i.toolName))).sort()]}
+                          placeholder="Type a tool name…"
+                          searchPlaceholder="Search tool history…"
+                          addLabel={(v) => `+ Add tool: ${v}`}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -254,43 +283,24 @@ export default function AISubscriptionsPage() {
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
-                  name="platform"
+                  name="platformName"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Platform</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {PLATFORMS.map((p) => (
-                            <SelectItem key={p} value={p}>
-                              {p}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <CreatableCombobox
+                          value={field.value}
+                          onChange={field.onChange}
+                          options={platforms.items}
+                          placeholder="Select or type a platform…"
+                          searchPlaceholder="Search platform…"
+                          addLabel={(v) => `+ Add platform: ${v}`}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                {form.watch("platform") === "Other" && (
-                  <FormField
-                    control={form.control}
-                    name="platformOther"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Other platform</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter Platform Name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
               </div>
 
               <FormField
