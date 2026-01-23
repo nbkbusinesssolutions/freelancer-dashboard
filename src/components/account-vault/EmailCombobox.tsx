@@ -24,11 +24,30 @@ export default function EmailCombobox({
   const [addOpen, setAddOpen] = React.useState(false);
   const [prefillEmail, setPrefillEmail] = React.useState<string>("");
 
-  const selected = items.find((i) => i.id === valueId);
-  const normalizedQuery = query.trim().toLowerCase();
-  const exactMatch = normalizedQuery.length > 0 && items.some((i) => i.email.toLowerCase() === normalizedQuery);
+  // Ensure newly-created emails appear immediately in the combobox selection,
+  // even if the upstream list (React Query) hasn't refetched yet.
+  const [createdItems, setCreatedItems] = React.useState<AccountVaultItem[]>([]);
 
-  const takenEmails = React.useMemo(() => items.map((i) => i.email), [items]);
+  React.useEffect(() => {
+    if (createdItems.length === 0) return;
+    const ids = new Set(items.map((i) => i.id));
+    setCreatedItems((prev) => prev.filter((i) => !ids.has(i.id)));
+  }, [items, createdItems.length]);
+
+  const mergedItems = React.useMemo(() => {
+    if (createdItems.length === 0) return items;
+    const map = new Map<string, AccountVaultItem>();
+    // Prefer server items when present, but keep locally-created ones until refetch.
+    for (const i of createdItems) map.set(i.id, i);
+    for (const i of items) map.set(i.id, i);
+    return Array.from(map.values());
+  }, [items, createdItems]);
+
+  const selected = mergedItems.find((i) => i.id === valueId);
+  const normalizedQuery = query.trim().toLowerCase();
+  const exactMatch = normalizedQuery.length > 0 && mergedItems.some((i) => i.email.toLowerCase() === normalizedQuery);
+
+  const takenEmails = React.useMemo(() => mergedItems.map((i) => i.email), [mergedItems]);
 
   return (
     <>
@@ -57,7 +76,7 @@ export default function EmailCombobox({
             <CommandList>
               <CommandEmpty>No email found.</CommandEmpty>
               <CommandGroup heading="Account Vault">
-                {items.map((item) => (
+                {mergedItems.map((item) => (
                   <CommandItem
                     key={item.id}
                     value={item.email}
@@ -98,7 +117,10 @@ export default function EmailCombobox({
         onOpenChange={setAddOpen}
         initialEmail={prefillEmail}
         takenEmails={takenEmails}
-        onCreated={(created) => onChange(created.id)}
+        onCreated={(created) => {
+          setCreatedItems((prev) => (prev.some((i) => i.id === created.id) ? prev : [created, ...prev]));
+          onChange(created.id);
+        }}
       />
     </>
   );
