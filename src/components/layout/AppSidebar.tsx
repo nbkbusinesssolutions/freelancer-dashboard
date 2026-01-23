@@ -11,6 +11,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 
 const items = [
@@ -26,6 +27,11 @@ export default function AppSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
   const isActive = (path: string) => currentPath === path;
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  const handleNavigate = () => {
+    if (isMobile) setOpenMobile(false);
+  };
 
   return (
     <Sidebar collapsible="icon">
@@ -49,6 +55,7 @@ export default function AppSidebar() {
                       end
                       className="w-full"
                       activeClassName="bg-sidebar-accent text-sidebar-accent-foreground"
+                      onClick={handleNavigate}
                     >
                       <item.icon />
                       <span>{item.title}</span>
