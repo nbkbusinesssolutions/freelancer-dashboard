@@ -13,11 +13,13 @@ export default function EmailCombobox({
   items,
   valueId,
   onChange,
+  showAddButton = true,
 }: {
   label: string;
   items: AccountVaultItem[];
   valueId: string | undefined;
   onChange: (id: string) => void;
+  showAddButton?: boolean;
 }) {
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
@@ -51,66 +53,80 @@ export default function EmailCombobox({
 
   return (
     <>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
+      <div className="flex items-center gap-2">
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className={cn("w-full justify-between", selected && !selected.isActive && "opacity-70")}
+            >
+              <span className="truncate">
+                {selected ? selected.email : <span className="text-muted-foreground">Select {label}…</span>}
+              </span>
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+            <Command>
+              <CommandInput placeholder={`Search ${label}…`} value={query} onValueChange={(v) => setQuery(v)} />
+              <CommandList>
+                <CommandEmpty>No email found.</CommandEmpty>
+                <CommandGroup heading="Account Vault">
+                  {mergedItems.map((item) => (
+                    <CommandItem
+                      key={item.id}
+                      value={item.email}
+                      onSelect={() => {
+                        onChange(item.id);
+                        setOpen(false);
+                      }}
+                      className={cn(!item.isActive && "opacity-70")}
+                    >
+                      <Check className={cn("mr-2 h-4 w-4", valueId === item.id ? "opacity-100" : "opacity-0")} />
+                      <span className="truncate">{item.email}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+
+                {!exactMatch && normalizedQuery.includes("@") && (
+                  <CommandGroup heading="Quick add">
+                    <CommandItem
+                      value={`+ Add ${normalizedQuery}`}
+                      onSelect={() => {
+                        setPrefillEmail(query.trim());
+                        setAddOpen(true);
+                        setOpen(false);
+                      }}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />+ Add this email to Account Vault
+                    </CommandItem>
+                  </CommandGroup>
+                )}
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+
+        {showAddButton && (
           <Button
             type="button"
             variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className={cn("w-full justify-between", selected && !selected.isActive && "opacity-70")}
+            size="icon"
+            aria-label={`Add ${label}`}
+            onClick={() => {
+              const candidate = query.trim();
+              setPrefillEmail(candidate.includes("@") ? candidate : "");
+              setAddOpen(true);
+              setOpen(false);
+            }}
           >
-            <span className="truncate">
-              {selected ? selected.email : <span className="text-muted-foreground">Select {label}…</span>}
-            </span>
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            <Plus className="h-4 w-4" />
           </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-          <Command>
-            <CommandInput
-              placeholder={`Search ${label}…`}
-              value={query}
-              onValueChange={(v) => setQuery(v)}
-            />
-            <CommandList>
-              <CommandEmpty>No email found.</CommandEmpty>
-              <CommandGroup heading="Account Vault">
-                {mergedItems.map((item) => (
-                  <CommandItem
-                    key={item.id}
-                    value={item.email}
-                    onSelect={() => {
-                      onChange(item.id);
-                      setOpen(false);
-                    }}
-                    className={cn(!item.isActive && "opacity-70")}
-                  >
-                    <Check className={cn("mr-2 h-4 w-4", valueId === item.id ? "opacity-100" : "opacity-0")} />
-                    <span className="truncate">{item.email}</span>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-
-              {!exactMatch && normalizedQuery.includes("@") && (
-                <CommandGroup heading="Quick add">
-                  <CommandItem
-                    value={`+ Add ${normalizedQuery}`}
-                    onSelect={() => {
-                      setPrefillEmail(query.trim());
-                      setAddOpen(true);
-                      setOpen(false);
-                    }}
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    + Add this email to Account Vault
-                  </CommandItem>
-                </CommandGroup>
-              )}
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
+        )}
+      </div>
 
       <AccountVaultUpsertDialog
         open={addOpen}
