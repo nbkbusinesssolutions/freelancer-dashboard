@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 import {
   Dialog,
@@ -48,17 +49,17 @@ export function ResponsiveModal({
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className={contentClassName}>
+        <DrawerContent className={cn("max-h-[85svh]", "flex flex-col", contentClassName)}>
           <DrawerHeader>
             <DrawerTitle>{title}</DrawerTitle>
             {description ? <DrawerDescription>{description}</DrawerDescription> : null}
           </DrawerHeader>
 
-          <div className="px-4 pb-2">
+          <div className="min-h-0 flex-1 overflow-auto px-4 pb-2">
             {children}
           </div>
 
-          {footer ? <DrawerFooter>{footer}</DrawerFooter> : null}
+          {footer ? <DrawerFooter className="border-t bg-background">{footer}</DrawerFooter> : null}
           {/* Ensures swipe-down close still has an accessible close path */}
           <DrawerClose className="sr-only">Close</DrawerClose>
         </DrawerContent>
@@ -68,7 +69,7 @@ export function ResponsiveModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={contentClassName}>
+      <DialogContent className={cn("max-h-[85svh] overflow-auto", contentClassName)}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description ? <DialogDescription>{description}</DialogDescription> : null}

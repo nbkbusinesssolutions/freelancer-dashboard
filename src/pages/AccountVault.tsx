@@ -30,14 +30,15 @@ export default function AccountVaultPage() {
     <main className="space-y-6">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Account Vault</h1>
+          <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">Account Vault</h1>
           <p className="text-sm text-muted-foreground">Central registry of every account email used anywhere.</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setBulkOpen(true)}>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button className="min-h-11 w-full sm:w-auto" variant="outline" onClick={() => setBulkOpen(true)}>
             Bulk Add
           </Button>
           <Button
+            className="min-h-11 w-full sm:w-auto"
             onClick={() => {
               setEditing(undefined);
               setDialogOpen(true);

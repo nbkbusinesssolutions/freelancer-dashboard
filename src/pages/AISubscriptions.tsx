@@ -139,10 +139,10 @@ export default function AISubscriptionsPage() {
     <main className="space-y-6">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">AI Subscriptions</h1>
+          <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">AI Subscriptions</h1>
           <p className="text-sm text-muted-foreground">Prevent forgotten trials and surprise charges.</p>
         </div>
-        <Button className="w-full sm:w-auto" onClick={() => setOpen(true)}>
+        <Button className="min-h-11 w-full sm:w-auto" onClick={() => setOpen(true)}>
           <Plus className="mr-2 h-4 w-4" /> Add Subscription
         </Button>
       </header>

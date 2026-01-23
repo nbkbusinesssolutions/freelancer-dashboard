@@ -56,7 +56,7 @@ export default function DashboardPage() {
   return (
     <main className="space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
+        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">Dashboard</h1>
         <p className="text-sm text-muted-foreground">Where is everything, who owns it, and what needs action.</p>
       </header>
 
@@ -67,6 +67,7 @@ export default function DashboardPage() {
               <span>Reminder: {stageLabel(reminderHit.stage)}</span>
               <Button
                 variant="secondary"
+                className="min-h-11"
                 onClick={() => {
                   markReminderShown(reminderHit.key, todayIso);
                   navigate(`/ai-subscriptions?focus=${encodeURIComponent(reminderHit.sub.id)}`);
@@ -90,7 +91,7 @@ export default function DashboardPage() {
             <CardTitle className="text-3xl">{projects.length}</CardTitle>
           </CardHeader>
           <CardContent>
-            <Button variant="outline" className="w-full" onClick={() => navigate("/projects")}
+            <Button variant="outline" className="min-h-11 w-full" onClick={() => navigate("/projects")}
             >
               View
             </Button>
@@ -102,7 +103,7 @@ export default function DashboardPage() {
             <CardTitle className="text-3xl">{projects.filter((p) => p.status === "Active").length}</CardTitle>
           </CardHeader>
           <CardContent>
-            <Button variant="outline" className="w-full" onClick={() => navigate("/projects?status=Active")}
+            <Button variant="outline" className="min-h-11 w-full" onClick={() => navigate("/projects?status=Active")}
             >
               Filter
             </Button>
@@ -114,7 +115,7 @@ export default function DashboardPage() {
             <CardTitle className="text-3xl">{expiringSoon.length}</CardTitle>
           </CardHeader>
           <CardContent>
-            <Button variant="outline" className="w-full" onClick={() => navigate("/ai-subscriptions?status=Expiring%20Soon")}
+            <Button variant="outline" className="min-h-11 w-full" onClick={() => navigate("/ai-subscriptions?status=Expiring%20Soon")}
             >
               Filter
             </Button>
@@ -126,7 +127,7 @@ export default function DashboardPage() {
             <CardTitle className="text-3xl">{expired.length}</CardTitle>
           </CardHeader>
           <CardContent>
-            <Button variant="outline" className="w-full" onClick={() => navigate("/ai-subscriptions?status=Expired")}
+            <Button variant="outline" className="min-h-11 w-full" onClick={() => navigate("/ai-subscriptions?status=Expired")}
             >
               Review
             </Button>

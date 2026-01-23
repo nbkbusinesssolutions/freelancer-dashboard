@@ -129,10 +129,10 @@ export default function ProjectsPage() {
     <main className="space-y-6">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Projects</h1>
+          <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">Projects</h1>
           <p className="text-sm text-muted-foreground">Client website management with clear account traceability.</p>
         </div>
-        <Button className="w-full sm:w-auto" onClick={() => setOpen(true)}>
+        <Button className="min-h-11 w-full sm:w-auto" onClick={() => setOpen(true)}>
           <Plus className="mr-2 h-4 w-4" /> Create Project
         </Button>
       </header>

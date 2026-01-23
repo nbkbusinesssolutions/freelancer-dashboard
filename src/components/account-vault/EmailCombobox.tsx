@@ -3,6 +3,7 @@ import { Check, ChevronsUpDown, Plus } from "lucide-react";
 
 import type { AccountVaultItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -21,6 +22,7 @@ export default function EmailCombobox({
   onChange: (id: string) => void;
   showAddButton?: boolean;
 }) {
+  const isMobile = useIsMobile();
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
   const [addOpen, setAddOpen] = React.useState(false);
@@ -61,7 +63,7 @@ export default function EmailCombobox({
               variant="outline"
               role="combobox"
               aria-expanded={open}
-              className={cn("w-full justify-between", selected && !selected.isActive && "opacity-70")}
+              className={cn("min-h-11 w-full justify-between", selected && !selected.isActive && "opacity-70")}
             >
               <span className="truncate">
                 {selected ? selected.email : <span className="text-muted-foreground">Select {label}…</span>}
@@ -72,7 +74,7 @@ export default function EmailCombobox({
           <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
             <Command>
               <CommandInput placeholder={`Search ${label}…`} value={query} onValueChange={(v) => setQuery(v)} />
-              <CommandList>
+              <CommandList className="max-h-[60vh] overflow-y-auto">
                 <CommandEmpty>No email found.</CommandEmpty>
                 <CommandGroup heading="Account Vault">
                   {mergedItems.map((item) => (
@@ -86,7 +88,7 @@ export default function EmailCombobox({
                       className={cn(!item.isActive && "opacity-70")}
                     >
                       <Check className={cn("mr-2 h-4 w-4", valueId === item.id ? "opacity-100" : "opacity-0")} />
-                      <span className="truncate">{item.email}</span>
+                      <span className="nbk-break-anywhere">{item.email}</span>
                     </CommandItem>
                   ))}
                 </CommandGroup>
@@ -114,7 +116,8 @@ export default function EmailCombobox({
           <Button
             type="button"
             variant="outline"
-            size="icon"
+            size={isMobile ? "default" : "icon"}
+            className={cn(isMobile ? "min-h-11 shrink-0" : "min-h-11 min-w-11")}
             aria-label={`Add ${label}`}
             onClick={() => {
               const candidate = query.trim();
@@ -123,7 +126,8 @@ export default function EmailCombobox({
               setOpen(false);
             }}
           >
-            <Plus className="h-4 w-4" />
+            <Plus className={cn("h-4 w-4", isMobile && "mr-2")} />
+            {isMobile ? "Add" : null}
           </Button>
         )}
       </div>

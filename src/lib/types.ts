@@ -56,3 +56,28 @@ export type AISubscriptionItem = {
   manualStatus?: SubscriptionManualStatus;
   notes?: string | null;
 };
+
+export type ServiceCadence = "One-time" | "Monthly" | "Yearly";
+export type PaymentStatus = "Unpaid" | "Paid" | "Overdue";
+
+export type ServiceCatalogItem = {
+  id: string;
+  serviceName: string;
+  cadence: ServiceCadence;
+  defaultAmount?: number | null;
+  notes?: string | null;
+  isActive: boolean;
+};
+
+export type BillingLogItem = {
+  id: string;
+  clientName: string;
+  projectName?: string | null;
+  serviceName: string;
+  cadence: ServiceCadence;
+  amount?: number | null;
+  paymentStatus: PaymentStatus;
+  paymentMode?: string | null;
+  serviceDate?: string | null; // ISO date
+  notes?: string | null;
+};
