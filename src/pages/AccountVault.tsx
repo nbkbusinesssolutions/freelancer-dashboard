@@ -9,9 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import AccountVaultUpsertDialog from "@/components/account-vault/AccountVaultUpsertDialog";
 import AccountVaultBulkAddDialog from "@/components/account-vault/AccountVaultBulkAddDialog";
+import AccountVaultList from "@/components/account-vault/AccountVaultList";
 
 export default function AccountVaultPage() {
   const q = useAccountVault();
@@ -54,68 +54,26 @@ export default function AccountVaultPage() {
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search email…" className="md:max-w-xs" />
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Email</TableHead>
-                <TableHead>Platform</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((item) => (
-                <TableRow key={item.id} className={!item.isActive ? "opacity-70" : undefined}>
-                  <TableCell className="font-medium">{item.email}</TableCell>
-                  <TableCell>{item.platform === "Other" ? item.platformOther || "Other" : item.platform}</TableCell>
-                  <TableCell>
-                    <Badge variant={item.isActive ? "default" : "secondary"}>{item.isActive ? "Active" : "Inactive"}</Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="inline-flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => {
-                          setEditing(item);
-                          setDialogOpen(true);
-                        }}
-                      >
-                        <Pencil className="h-4 w-4" />
-                        <span className="sr-only">Edit</span>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={async () => {
-                          try {
-                            await del.mutateAsync(item.id);
-                            toast({ title: "Deleted" });
-                          } catch (e: any) {
-                            toast({
-                              title: "Cannot delete",
-                              description: e?.message ? String(e.message) : "This email may be referenced elsewhere.",
-                              variant: "destructive",
-                            });
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Delete</span>
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {filtered.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-muted-foreground">
-                    {q.isLoading ? "Loading…" : "No emails yet."}
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <AccountVaultList
+            items={filtered}
+            loading={q.isLoading}
+            onEdit={(item) => {
+              setEditing(item);
+              setDialogOpen(true);
+            }}
+            onDelete={async (id) => {
+              try {
+                await del.mutateAsync(id);
+                toast({ title: "Deleted" });
+              } catch (e: any) {
+                toast({
+                  title: "Cannot delete",
+                  description: e?.message ? String(e.message) : "This email may be referenced elsewhere.",
+                  variant: "destructive",
+                });
+              }
+            }}
+          />
         </CardContent>
       </Card>
 
