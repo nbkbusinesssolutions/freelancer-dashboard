@@ -1,0 +1,203 @@
+You are a Senior Product Engineer, Mobile-First UX Architect, and Refactoring Specialist
+with 15+ years of experience building production-ready internal dashboards.
+
+You are working on an existing React + TypeScript web app:
+NBK Business Dashboard
+
+This app is an INTERNAL BUSINESS CONTROL CENTER.
+It will be pushed to GitHub and deployed on Netlify.
+This is NOT a prototype — it must be COMPLETE, POLISHED, and RELIABLE.
+
+Your task is to ANALYZE THE CURRENT CODEBASE FIRST
+and then APPLY PRECISE, PROFESSIONAL IMPROVEMENTS.
+
+━━━━━━━━━━━━━━━━━━━━━━
+ABSOLUTE RULES (NON-NEGOTIABLE)
+━━━━━━━━━━━━━━━━━━━━━━
+- Mobile-first design is the TOP priority
+- Every field entered in a form MUST be visible after save
+- Every entity MUST have:
+  • List view
+  • Detail view
+  • Edit capability
+- Reuse existing architecture and patterns
+- Do NOT add unnecessary features
+- Remove unused or confusing features
+- All amounts must be displayed in INR (₹)
+- No Netlify deployment issues allowed
+
+━━━━━━━━━━━━━━━━━━━━━━
+PART 1 — PROJECT CREATION → PROJECT DETAIL (CRITICAL)
+━━━━━━━━━━━━━━━━━━━━━━
+CURRENT PROBLEM:
+After creating “Project 2”, the data entered in the form is not
+beautifully or completely visible in the project list or project view.
+
+REQUIREMENT:
+Implement a PROPER PROJECT DETAIL VIEW.
+
+When a project is created:
+- It must appear immediately in the Projects list
+- Clicking a project must open a Project Detail page
+- ALL fields entered during creation must be displayed clearly
+
+FIELDS TO DISPLAY (GROUPED & READABLE):
+- Client name
+- Project name
+- Domain name
+- Domain provider
+- Domain account email
+- Deployment email
+- Hosting platform
+- Domain purchase date
+- Domain renewal date
+- Hosting start date
+- Hosting renewal date
+- Project status
+- Project amount (₹)
+- Payment status
+- Complete date
+- Pending amount (₹)
+- Notes
+
+UI REQUIREMENTS:
+- Mobile-first layout
+- Card-based sections
+- Clean spacing
+- Logical grouping
+- Easy to scan visually
+
+FUNCTIONAL REQUIREMENTS:
+- Project must be EDITABLE
+- Edit must update data everywhere
+- No duplicate or hidden fields
+- Same pattern reusable for other modules
+
+━━━━━━━━━━━━━━━━━━━━━━
+PART 2 — REMOVE SERVICES, CLEAN BILLING (MANDATORY)
+━━━━━━━━━━━━━━━━━━━━━━
+DECISION (LOCKED):
+- REMOVE Services module completely
+- Billing must exist as a CLEAN, SIMPLE system
+
+BILLING FIELDS REQUIRED:
+- Client name
+- Project
+- Service description (text input, NOT separate services module)
+- Billing cadence:
+  • Monthly
+  • Yearly
+  • One-time
+  • Custom (mandatory addition)
+- Amount (₹)
+- Paid amount (₹)
+- Due amount (₹)
+- Payment status (Paid / Unpaid / Partial)
+- Billing date
+- Notes
+
+DASHBOARD INTEGRATION:
+- Any Unpaid or Due billing MUST appear on Dashboard
+- Dashboard must reflect real business attention items
+
+━━━━━━━━━━━━━━━━━━━━━━
+PART 3 — AI SUBSCRIPTIONS DETAIL VIEW (IMPORTANT)
+━━━━━━━━━━━━━━━━━━━━━━
+CURRENT ISSUE:
+Subscription data is added but not clearly visible after creation.
+
+REQUIREMENTS:
+- Remove “platform” field completely
+- Tool name alone is enough
+- Create a Subscription Detail view
+
+DETAIL VIEW MUST SHOW:
+- Tool name
+- Email used
+- Subscription type
+- Start date
+- Cancel-by date
+- End date
+- Status
+- Notes
+
+FUNCTIONALITY:
+- Subscription must be editable
+- Mobile-friendly layout
+- Clean grouping of dates and status
+
+━━━━━━━━━━━━━━━━━━━━━━
+PART 4 — ACCOUNT VAULT (EMAIL DETAILS & EDITING)
+━━━━━━━━━━━━━━━━━━━━━━
+REQUIREMENTS:
+When adding an email account, fields must include:
+- Email ID
+- Platform (Gmail, Outlook, Custom, etc.)
+- Password (masked, show/hide toggle)
+- Notes (optional)
+
+AFTER CREATION:
+- Clicking an email must open a DETAIL VIEW
+- All entered fields must be visible
+- Email record must be editable
+- UI must clearly indicate sensitive fields
+
+━━━━━━━━━━━━━━━━━━━━━━
+PART 5 — EDITABILITY CONSISTENCY (GLOBAL RULE)
+━━━━━━━━━━━━━━━━━━━━━━
+RULE:
+If a field exists in a CREATE form,
+it MUST:
+- Be visible in DETAIL view
+- Be editable later
+
+Apply this rule consistently across:
+- Projects
+- Billing
+- AI Subscriptions
+- Account Vault
+
+━━━━━━━━━━━━━━━━━━━━━━
+PART 6 — DASHBOARD POLISH (VERY IMPORTANT)
+━━━━━━━━━━━━━━━━━━━━━━
+Dashboard must be:
+- Modern
+- Professional
+- Calm
+- Easy to understand in 5 seconds
+
+Dashboard must show:
+- Unpaid / Due billing
+- Renewals approaching
+- Active projects
+- Key attention items only
+
+RULES:
+- No clutter
+- No unnecessary charts
+- Clear visual hierarchy
+- Mobile-first layout
+
+━━━━━━━━━━━━━━━━━━━━━━
+PART 7 — MOBILE-FIRST UX (GLOBAL)
+━━━━━━━━━━━━━━━━━━━━━━
+Ensure:
+- All pages are fully usable on mobile
+- No horizontal scrolling
+- Buttons are touch-friendly
+- Forms are readable
+- Cards stack cleanly
+- No information loss on small screens
+
+━━━━━━━━━━━━━━━━━━━━━━
+FINAL EXPECTATION
+━━━━━━━━━━━━━━━━━━━━━━
+You must:
+- Explain what you will change
+- Apply changes cleanly
+- Reuse existing logic
+- Remove unused code safely
+- Ensure nothing breaks Netlify deployment
+
+Think like a senior engineer FINALIZING a real internal business product
+that will be used daily for years.

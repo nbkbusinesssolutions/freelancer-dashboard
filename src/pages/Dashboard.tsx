@@ -254,7 +254,7 @@ export default function DashboardPage() {
     },
     {
       title: "Pending Payments",
-      value: `$${totalPending.toLocaleString()}`,
+      value: `₹${totalPending.toLocaleString("en-IN")}`,
       actionLabel: "Review",
       actionTo: "/projects?payment=pending",
       sparkline: pendingPayments.slice(0, 14).map((p) => Math.min(10, p.pendingAmount / 1000)),

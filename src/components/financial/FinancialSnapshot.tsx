@@ -1,14 +1,29 @@
-import { DollarSign, TrendingUp, TrendingDown } from "lucide-react";
+import * as React from "react";
+import { TrendingUp, TrendingDown, Eye, EyeOff, IndianRupee } from "lucide-react";
 import { startOfMonth, endOfMonth, addDays, parseISO, isWithinInterval } from "date-fns";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 import { useInvoices } from "@/hooks/useInvoices";
 import { useAISubscriptions } from "@/hooks/useApiData";
 
+const VISIBILITY_KEY = "nbk.financialVisibility";
+
 export default function FinancialSnapshot() {
   const { items: invoices } = useInvoices();
   const aiSubsQ = useAISubscriptions();
+
+  const [showAmounts, setShowAmounts] = React.useState(() => {
+    const saved = localStorage.getItem(VISIBILITY_KEY);
+    return saved !== "hidden";
+  });
+
+  const toggleVisibility = () => {
+    const newValue = !showAmounts;
+    setShowAmounts(newValue);
+    localStorage.setItem(VISIBILITY_KEY, newValue ? "visible" : "hidden");
+  };
 
   const aiSubs = aiSubsQ.data?.items ?? [];
 
@@ -41,11 +56,32 @@ export default function FinancialSnapshot() {
     })
     .length;
 
+  const formatAmount = (amount: number) => {
+    if (!showAmounts) return "••••••";
+    return `₹${amount.toLocaleString("en-IN")}`;
+  };
+
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">Financial Snapshot</CardTitle>
-        <CardDescription>Quick overview of money in & out</CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <IndianRupee className="h-4 w-4" />
+              Financial Snapshot
+            </CardTitle>
+            <CardDescription>Quick overview of money in & out</CardDescription>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleVisibility}
+            className="h-8 w-8"
+            title={showAmounts ? "Hide amounts" : "Show amounts"}
+          >
+            {showAmounts ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 gap-4">
@@ -55,7 +91,7 @@ export default function FinancialSnapshot() {
               Revenue (This Month)
             </div>
             <div className="text-2xl font-semibold text-green-600">
-              ₹{revenueThisMonth.toLocaleString()}
+              {formatAmount(revenueThisMonth)}
             </div>
           </div>
           <div className="space-y-1">

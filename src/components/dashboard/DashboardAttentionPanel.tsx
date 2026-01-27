@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { DollarSign } from "lucide-react";
+import { IndianRupee } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -163,7 +163,7 @@ export default function DashboardAttentionPanel({
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2 text-sm font-medium">
-                    <DollarSign className="h-4 w-4 text-destructive" />
+                    <IndianRupee className="h-4 w-4 text-destructive" />
                     Pending Payments
                   </div>
                   <Button variant="outline" className="min-h-11" onClick={() => navigate("/projects")}>Open</Button>
@@ -179,7 +179,7 @@ export default function DashboardAttentionPanel({
                         <Badge data-testid={`badge-payment-${p.id}`} variant={p.paymentStatus === "Pending" ? "destructive" : "secondary"}>
                           {p.paymentStatus}
                         </Badge>
-                        <span data-testid={`text-amount-${p.id}`} className="text-sm font-medium text-destructive">${p.pendingAmount}</span>
+                        <span data-testid={`text-amount-${p.id}`} className="text-sm font-medium text-destructive">₹{p.pendingAmount.toLocaleString("en-IN")}</span>
                       </div>
                     </div>
                   ))}

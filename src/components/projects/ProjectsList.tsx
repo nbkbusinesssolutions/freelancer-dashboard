@@ -1,4 +1,4 @@
-import { Trash2, Calendar, Clock, DollarSign, Pencil } from "lucide-react";
+import { Trash2, Calendar, Clock, IndianRupee, Pencil } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
 import type { ProjectItem, ProjectStatus, ProjectPaymentStatus } from "@/lib/types";
@@ -78,7 +78,7 @@ export default function ProjectsList({
                     <Badge variant={statusVariant(p.status)}>{p.status}</Badge>
                     {p.paymentStatus && (
                       <Badge variant={paymentVariant(p.paymentStatus)}>
-                        <DollarSign className="mr-1 h-3 w-3" />
+                        <IndianRupee className="mr-1 h-3 w-3" />
                         {p.paymentStatus}
                       </Badge>
                     )}
@@ -94,7 +94,7 @@ export default function ProjectsList({
 
                 {hasPendingPayment && typeof p.pendingAmount === "number" && p.pendingAmount > 0 && (
                   <div className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-sm">
-                    <span className="font-medium text-destructive">Pending: ${p.pendingAmount}</span>
+                    <span className="font-medium text-destructive">Pending: ₹{p.pendingAmount?.toLocaleString("en-IN")}</span>
                   </div>
                 )}
 
@@ -215,7 +215,7 @@ export default function ProjectsList({
                   <div className="space-y-1">
                     <Badge data-testid={`badge-payment-status-${p.id}`} variant={paymentVariant(p.paymentStatus)}>{p.paymentStatus}</Badge>
                     {hasPendingPayment && typeof p.pendingAmount === "number" && p.pendingAmount > 0 && (
-                      <div data-testid={`text-pending-amount-${p.id}`} className="text-xs font-medium text-destructive">${p.pendingAmount} pending</div>
+                      <div data-testid={`text-pending-amount-${p.id}`} className="text-xs font-medium text-destructive">₹{p.pendingAmount?.toLocaleString("en-IN")} pending</div>
                     )}
                   </div>
                 ) : (

@@ -23,6 +23,19 @@ Internal control center for NBK Business Solutions to manage client projects, in
 
 ## Recent Changes (2026-01-27)
 
+### Project Detail Page Redesign:
+- **Comprehensive Layout**: All project fields now displayed in organized card sections
+- **Clear Sections**: Basic Information, Domain Information, Hosting Information, Payment & Status
+- **All Dates Visible**: Domain purchase date, renewal date, hosting start date, renewal date with countdowns
+- **Payment Summary**: Project amount, payment status, pending amount, completed date
+- **Edit Button**: Quick access to edit project directly from detail view
+- **INR Currency**: All amounts displayed in ₹ (Indian Rupees) with locale formatting
+
+### Financial Snapshot Improvements:
+- **Show/Hide Toggle**: Eye icon button to mask/unmask financial amounts
+- **Privacy Feature**: Remembers preference in localStorage
+- **INR Currency**: Revenue displayed in ₹ format
+
 ### Module Consolidation:
 - **Unified Email Accounts**: Merged Account Vault and Email Accounts into a single module
 - **Email Tags**: Added tags field for categorization (Domain, Hosting, Admin, etc.)

@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, User, Briefcase, DollarSign, AlertCircle } from "lucide-react";
+import { ArrowLeft, User, Briefcase, IndianRupee, AlertCircle } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +27,7 @@ export default function ClientDetailPage() {
   const clientName = clientId ? decodeURIComponent(clientId) : "";
 
   const projectsQ = useProjects();
-  const { items: invoices, isLoading: invoicesLoading } = useInvoices();
+  const { items: invoices, loading: invoicesLoading } = useInvoices();
 
   const projects = projectsQ.data?.items ?? [];
 
@@ -41,10 +41,10 @@ export default function ClientDetailPage() {
     (inv) => inv.clientName.toLowerCase() === clientName.toLowerCase()
   );
 
-  const totalBilled = clientInvoices.reduce((sum, inv) => sum + (inv.total ?? 0), 0);
+  const totalBilled = clientInvoices.reduce((sum, inv) => sum + (inv.grandTotal ?? 0), 0);
   const totalPaid = clientInvoices
     .filter((inv) => inv.paymentStatus === "Paid")
-    .reduce((sum, inv) => sum + (inv.total ?? 0), 0);
+    .reduce((sum, inv) => sum + (inv.grandTotal ?? 0), 0);
 
   if (isLoading) {
     return (
@@ -150,16 +150,16 @@ export default function ClientDetailPage() {
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Total Billed</span>
-                <span className="font-medium">${totalBilled.toLocaleString()}</span>
+                <span className="font-medium">₹{totalBilled.toLocaleString("en-IN")}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Total Paid</span>
-                <span className="font-medium text-green-600">${totalPaid.toLocaleString()}</span>
+                <span className="font-medium text-green-600">₹{totalPaid.toLocaleString("en-IN")}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Outstanding</span>
                 <span className="font-medium text-orange-600">
-                  ${(totalBilled - totalPaid).toLocaleString()}
+                  ₹{(totalBilled - totalPaid).toLocaleString("en-IN")}
                 </span>
               </div>
             </CardContent>
@@ -180,7 +180,7 @@ export default function ClientDetailPage() {
                         <div className="text-xs text-muted-foreground">{formatDate(inv.invoiceDate)}</div>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-medium">{inv.total ? `$${inv.total.toFixed(2)}` : "-"}</div>
+                        <div className="text-sm font-medium">{inv.grandTotal ? `₹${inv.grandTotal.toLocaleString("en-IN")}` : "-"}</div>
                         <Badge
                           variant={
                             inv.paymentStatus === "Paid"
