@@ -113,3 +113,17 @@ export type BillingLogItem = {
   serviceDate?: string | null; // ISO date
   notes?: string | null;
 };
+
+export type EmailAccountStatus = "Active" | "Not in use";
+export type EmailProvider = "Gmail" | "Outlook" | "Custom";
+
+export type EmailAccountItem = {
+  id: string;
+  email: string;
+  provider: EmailProvider;
+  password?: string | null;
+  recoveryEmail?: string | null;
+  phone?: string | null;
+  notes?: string | null;
+  status: EmailAccountStatus;
+};

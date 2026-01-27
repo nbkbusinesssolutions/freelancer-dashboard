@@ -13,6 +13,7 @@ import { computeDateExpiry } from "@/lib/dateExpiry";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Form,
   FormControl,
@@ -79,6 +80,7 @@ export default function ProjectsPage() {
   const del = useDeleteProject();
 
   const [open, setOpen] = React.useState(false);
+  const [search, setSearch] = React.useState("");
   const items = projectsQ.data?.items ?? [];
   const filtered = items.filter((p) => {
     if (filterStatus && p.status !== filterStatus) return false;
@@ -96,6 +98,16 @@ export default function ProjectsPage() {
     if (filterRenewal === "hosting") return hosting ? hosting.status !== "Active" : false;
     // overdue
     return (domain?.daysLeft ?? 9999) < 0 || (hosting?.daysLeft ?? 9999) < 0;
+  }).filter((p) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (
+      p.clientName.toLowerCase().includes(q) ||
+      p.projectName.toLowerCase().includes(q) ||
+      p.domainName.toLowerCase().includes(q) ||
+      (p.hostingPlatform?.toLowerCase().includes(q) ?? false) ||
+      (p.notes?.toLowerCase().includes(q) ?? false)
+    );
   });
 
   const vault = vaultQ.data?.items ?? [];
@@ -192,8 +204,16 @@ export default function ProjectsPage() {
       </header>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Projects {filterStatus ? `(filtered: ${filterStatus})` : ""}</CardTitle>
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <CardTitle className="text-base">
+            Projects {filterStatus ? `(${filterStatus})` : filterRenewal ? `(${filterRenewal} renewals)` : ""}
+          </CardTitle>
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="Search projects..."
+            className="w-full sm:max-w-xs"
+          />
         </CardHeader>
         <CardContent>
           <ProjectsList

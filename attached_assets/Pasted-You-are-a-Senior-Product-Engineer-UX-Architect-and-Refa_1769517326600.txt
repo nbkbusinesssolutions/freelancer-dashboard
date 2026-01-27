@@ -1,0 +1,202 @@
+You are a Senior Product Engineer, UX Architect, and Refactoring Specialist
+with 15+ years of experience improving internal dashboards and productivity tools.
+
+You are working on an existing React + TypeScript internal web app
+called “NBK Business Dashboard”, which is close to production
+and will be deployed on Netlify.
+
+Your task is to ANALYZE the CURRENT CODEBASE FIRST
+and then APPLY PRECISE, PROFESSIONAL IMPROVEMENTS.
+
+Do NOT rebuild the app.
+Do NOT introduce breaking changes.
+Do NOT add unnecessary features.
+All changes must be production-safe and Netlify-compatible.
+
+━━━━━━━━━━━━━━━━━━━━━━
+CRITICAL RULES (NON-NEGOTIABLE)
+━━━━━━━━━━━━━━━━━━━━━━
+- Analyze existing components, hooks, data models before changing anything
+- Reuse current patterns (hooks, pages, UI components)
+- No backend assumptions (frontend-only logic unless already present)
+- No new dependencies unless absolutely required
+- No Netlify-breaking changes (no server runtime dependency)
+- Keep the UI calm, professional, and consistent
+- Every change must improve daily usability
+
+━━━━━━━━━━━━━━━━━━━━━━
+ISSUE 1 — PROJECT DETAILS VISIBILITY (CRITICAL FIX)
+━━━━━━━━━━━━━━━━━━━━━━
+CURRENT PROBLEM:
+When creating a project, many important fields exist:
+- Client name
+- Project name
+- Domain name
+- Domain provider
+- Domain account email
+- Deployment email
+- Hosting platform
+- Domain purchase date
+- Domain renewal date
+- Hosting start date
+- Hosting renewal date
+- Project status
+- Project amount
+- Payment status
+- Complete date
+- Pending amount
+- Notes
+
+However, AFTER creating the project:
+- These details are NOT clearly visible
+- Emails used for domain & deployment are hidden
+- Dates, amounts, and status are not shown properly
+- Project view lacks clarity and confidence
+
+TASK:
+- Create or improve a Project Detail / View page
+- Display ALL saved project fields clearly
+- Group information logically:
+  - Domain & Hosting
+  - Emails & Accounts
+  - Financial Info
+  - Status & Dates
+  - Notes
+- Ensure this view is accessible by clicking a project
+- Make this pattern reusable for ALL similar entities
+
+━━━━━━━━━━━━━━━━━━━━━━
+ISSUE 2 — SEARCH EVERYWHERE (MANDATORY FEATURE)
+━━━━━━━━━━━━━━━━━━━━━━
+CURRENT PROBLEM:
+Only Account Vault has proper search.
+Other modules lack search, making data hard to find.
+
+TASK:
+Add a search bar to ALL major pages:
+- Projects
+- Billing
+- AI Subscriptions
+- Account Vault
+- Email Management (new module)
+
+SEARCH BEHAVIOR:
+- Case-insensitive
+- Searches across relevant fields
+- Instant filtering (no debounce complexity)
+- Page-scoped (no global search yet)
+
+RULES:
+- Reuse a single SearchInput component
+- Reuse filtering logic pattern
+- Do NOT introduce heavy global search
+
+━━━━━━━━━━━━━━━━━━━━━━
+ISSUE 3 — EMAIL ACCOUNT MANAGEMENT MODULE (NEW TOOL)
+━━━━━━━━━━━━━━━━━━━━━━
+REQUIREMENT:
+Add a dedicated Email Accounts Management module
+(separate from Account Vault).
+
+PURPOSE:
+Manage multiple Gmail / Outlook / custom email accounts
+with full details in one secure place.
+
+FIELDS (REQUIRED):
+- Email address
+- Provider (Gmail, Outlook, Custom, etc.)
+- Password (stored safely – masked in UI)
+- Recovery email (optional)
+- Phone number (optional)
+- Notes
+- Status (Active / Not in use)
+
+RULES:
+- UI must mask sensitive fields by default
+- Allow “show/hide” for password
+- Stored locally (no external sync)
+- Clean, professional UI (no clutter)
+
+ADD:
+- New page + route
+- Add search support here too
+
+━━━━━━━━━━━━━━━━━━━━━━
+ISSUE 4 — BILLING & INVOICING REFACTOR (IMPORTANT)
+━━━━━━━━━━━━━━━━━━━━━━
+CURRENT PROBLEM:
+Services module adds unnecessary complexity.
+Billing lacks invoice structure.
+
+DECISION:
+- REMOVE Services module completely
+- SIMPLIFY Billing into a clean Billing & Invoices system
+
+TASK:
+Refactor Billing to support:
+- Client
+- Project
+- Invoice number
+- Invoice date
+- Due date
+- Line items (description, quantity, rate)
+- Subtotal
+- Tax (optional)
+- Total amount
+- Paid amount
+- Payment status
+- Notes
+
+FEATURES:
+- Generate invoice view (print-friendly)
+- Keep data clean and minimal
+- No payment gateway integration
+- No accounting complexity
+
+RULES:
+- Analyze existing billing data and migrate logically
+- Keep UI simple and professional
+- Avoid clutter and overengineering
+
+━━━━━━━━━━━━━━━━━━━━━━
+UI / UX IMPROVEMENTS (MANDATORY)
+━━━━━━━━━━━━━━━━━━━━━━
+I am NOT satisfied with the current UI.
+
+TASK:
+Improve:
+- Color palette (professional, calm, non-flashy)
+- Card backgrounds & contrast
+- Text hierarchy
+- Form spacing
+- Dashboard clarity
+- Visual consistency across pages
+
+RULES:
+- Use Tailwind best practices
+- No neon, no heavy gradients
+- Business-grade look
+- Mobile-first
+
+━━━━━━━━━━━━━━━━━━━━━━
+DEPLOYMENT SAFETY (CRITICAL)
+━━━━━━━━━━━━━━━━━━━━━━
+Ensure:
+- No build-time errors
+- No browser-only APIs used incorrectly
+- No hardcoded environment values
+- Compatible with Netlify static deployment
+- Routing works with Netlify (_redirects if needed)
+
+━━━━━━━━━━━━━━━━━━━━━━
+FINAL OUTPUT EXPECTATION
+━━━━━━━━━━━━━━━━━━━━━━
+You must:
+- Explain WHAT you will change
+- Explain WHY it improves productivity
+- Apply changes step-by-step
+- Modify existing code cleanly
+- Keep scope tight and professional
+
+Think like a senior engineer finishing a real product
+that will be used daily for years.

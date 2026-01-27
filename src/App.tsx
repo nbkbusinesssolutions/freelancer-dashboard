@@ -9,8 +9,9 @@ import AccountVaultPage from "@/pages/AccountVault";
 import ProjectsPage from "@/pages/Projects";
 import ProjectDetailPage from "@/pages/ProjectDetail";
 import ClientDetailPage from "@/pages/ClientDetail";
-import ServicesPage from "@/pages/Services";
+import BillingPage from "@/pages/Billing";
 import AISubscriptionsPage from "@/pages/AISubscriptions";
+import EmailAccountsPage from "@/pages/EmailAccounts";
 import SettingsPage from "@/pages/Settings";
 import NotFound from "./pages/NotFound";
 
@@ -29,8 +30,9 @@ const App = () => (
             <Route path="/projects" element={<ProjectsPage />} />
             <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
             <Route path="/clients/:clientId" element={<ClientDetailPage />} />
-            <Route path="/services" element={<ServicesPage />} />
+            <Route path="/services" element={<BillingPage />} />
             <Route path="/ai-subscriptions" element={<AISubscriptionsPage />} />
+            <Route path="/email-accounts" element={<EmailAccountsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

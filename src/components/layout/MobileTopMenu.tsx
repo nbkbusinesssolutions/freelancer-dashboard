@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useLocation } from "react-router-dom";
-import { LayoutDashboard, FolderKanban, Receipt, Sparkles, Vault, Settings, Menu } from "lucide-react";
+import { LayoutDashboard, FolderKanban, Receipt, Sparkles, Vault, Settings, Menu, Mail } from "lucide-react";
 
 import { NavLink } from "@/components/NavLink";
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,9 @@ import { cn } from "@/lib/utils";
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Projects", url: "/projects", icon: FolderKanban },
-  { title: "Services & Billing", url: "/services", icon: Receipt },
+  { title: "Billing", url: "/services", icon: Receipt },
   { title: "AI Subscriptions", url: "/ai-subscriptions", icon: Sparkles },
+  { title: "Email Accounts", url: "/email-accounts", icon: Mail },
   { title: "Account Vault", url: "/account-vault", icon: Vault },
   { title: "Settings", url: "/settings", icon: Settings },
 ];

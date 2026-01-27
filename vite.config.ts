@@ -12,13 +12,6 @@ export default defineConfig(() => ({
     hmr: {
       overlay: false,
     },
-    proxy: {
-      "/health": "http://localhost:3000",
-      "/debug": "http://localhost:3000",
-      "/account-vault": "http://localhost:3000",
-      "/projects": "http://localhost:3000",
-      "/ai-subscriptions": "http://localhost:3000",
-    },
   },
   plugins: [
     react(),

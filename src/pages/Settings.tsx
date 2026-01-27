@@ -22,6 +22,7 @@ const STORAGE_KEYS = [
   "nbk.projectLogs",
   "nbk.masterList.servicesCatalog",
   "nbk.masterList.billingLog",
+  "nbk.emailAccounts",
   "nbk.remindersShown",
   "externalApiBaseUrl",
   "externalApiKey",
@@ -174,7 +175,7 @@ export default function SettingsPage() {
             />
           </div>
           <p className="text-xs text-muted-foreground">
-            Includes: Action items, project logs, services catalog, billing log, and settings.
+            Includes: Action items, project logs, billing records, email accounts, and settings.
           </p>
         </CardContent>
       </Card>

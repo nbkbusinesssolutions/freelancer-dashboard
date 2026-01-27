@@ -1,7 +1,7 @@
 # NBK Control Center
 
 ## Overview
-Internal control center for NBK Business Solutions to manage client projects, services, renewals, and billing. Built with React, TypeScript, and Tailwind CSS.
+Internal control center for NBK Business Solutions to manage client projects, billing, email accounts, and AI subscriptions. Built with React, TypeScript, and Tailwind CSS.
 
 ## Current State (Production Ready)
 - Full-stack application with Vite frontend
@@ -9,8 +9,10 @@ Internal control center for NBK Business Solutions to manage client projects, se
 - Dashboard with KPI cards, attention panels, financial snapshot, and action items
 - Projects management with payment tracking and countdown alerts
 - AI Subscriptions management with expiry tracking
+- Email Accounts management for storing email credentials securely
 - Account Vault for credential management
 - Client dossier pages for quick client overview
+- Search functionality on all major pages
 
 ## Deployment (Netlify)
 - `netlify.toml` configured for SPA routing
@@ -19,20 +21,18 @@ Internal control center for NBK Business Solutions to manage client projects, se
 - Publish directory: `dist`
 
 ## Recent Changes (2026-01-27)
+### New Features:
+- **Search Everywhere**: Added search to Projects, AI Subscriptions, Billing, and Email Accounts pages
+- **Email Accounts Module**: New dedicated page for managing email credentials with password masking
+- **Simplified Billing**: Removed Service Catalog, focused on billing records only
+- **Reusable SearchInput**: Created `SearchInput` component for consistent search UI
+
 ### Production Readiness:
 - Added Netlify routing config (netlify.toml + _redirects)
 - Added data export/import in Settings for backup
 - Updated branding to "NBK Control Center"
 - Applied NBK brand color palette (navy + gold)
 - Cleaned up API indicator (shows "Local" or "Synced")
-
-### Phase 1 Features:
-- Unified Project Detail Page with all project info
-- Action Items System (contextual tasks)
-- Attention State manual override system
-- Client Dossier pages
-- Financial Snapshot on Dashboard
-- Project Log for chronological notes
 
 ## Architecture
 
@@ -51,16 +51,17 @@ Internal control center for NBK Business Solutions to manage client projects, se
 ### Local Storage Keys
 - `nbk.actions` - Action items
 - `nbk.projectLogs` - Project log entries
-- `nbk.masterList.servicesCatalog` - Services catalog
-- `nbk.masterList.billingLog` - Billing log
+- `nbk.masterList.billingLog` - Billing records
+- `nbk.emailAccounts` - Email account credentials
 
 ## Key Files
 - `src/pages/Dashboard.tsx` - Main dashboard
 - `src/pages/ProjectDetail.tsx` - Unified project view
 - `src/pages/ClientDetail.tsx` - Client dossier
+- `src/pages/Billing.tsx` - Billing records
+- `src/pages/EmailAccounts.tsx` - Email credentials management
 - `src/pages/Settings.tsx` - Data backup & API config
-- `src/components/actions/ActionItemsSection.tsx` - Action items
-- `src/components/financial/FinancialSnapshot.tsx` - Financial overview
+- `src/components/ui/search-input.tsx` - Reusable search component
 - `src/index.css` - NBK brand color palette
 
 ## Routes
@@ -68,8 +69,9 @@ Internal control center for NBK Business Solutions to manage client projects, se
 - `/projects` - Projects list
 - `/projects/:projectId` - Project detail
 - `/clients/:clientId` - Client dossier
-- `/services` - Services & Billing
+- `/services` - Billing records
 - `/ai-subscriptions` - AI Subscriptions
+- `/email-accounts` - Email Accounts
 - `/account-vault` - Account Vault
 - `/settings` - Settings & Backup
 
@@ -91,3 +93,4 @@ Internal control center for NBK Business Solutions to manage client projects, se
 - Use color-coded badges for status indicators
 - Attention states for manual override of automated alerts
 - Calm, professional UI (no flashy colors)
+- Search functionality on all data pages

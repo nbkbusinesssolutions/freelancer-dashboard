@@ -12,6 +12,7 @@ import { computeSubscriptionStatus } from "@/lib/subscriptionStatus";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Form,
   FormControl,
@@ -93,9 +94,19 @@ export default function AISubscriptionsPage() {
   }, [tools.items, q.data?.items]);
 
   const [open, setOpen] = React.useState(false);
+  const [search, setSearch] = React.useState("");
 
   const items = (q.data?.items ?? []).map((s) => ({ ...s, computedStatus: computeSubscriptionStatus(s) }));
-  const filtered = filterStatus ? items.filter((s) => s.computedStatus === filterStatus) : items;
+  const filtered = (filterStatus ? items.filter((s) => s.computedStatus === filterStatus) : items).filter((s) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    const platName = s.platform === "Other" ? s.platformOther : s.platform;
+    return (
+      s.toolName.toLowerCase().includes(q) ||
+      (platName?.toLowerCase().includes(q) ?? false) ||
+      (s.notes?.toLowerCase().includes(q) ?? false)
+    );
+  });
 
   React.useEffect(() => {
     if (!focusId) return;
@@ -162,8 +173,16 @@ export default function AISubscriptionsPage() {
       </header>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Subscriptions {filterStatus ? `(filtered: ${filterStatus})` : ""}</CardTitle>
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <CardTitle className="text-base">
+            Subscriptions {filterStatus ? `(${filterStatus})` : ""}
+          </CardTitle>
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="Search subscriptions..."
+            className="w-full sm:max-w-xs"
+          />
         </CardHeader>
         <CardContent>
           <AISubscriptionsList
