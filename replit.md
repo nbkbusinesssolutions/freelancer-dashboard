@@ -5,7 +5,7 @@ Internal control center for NBK Business Solutions to manage client projects, in
 
 ## Current State (Production Ready)
 - Full-stack application with Vite frontend
-- LocalStorage for data persistence with export/import backup
+- **Supabase PostgreSQL** backend with Netlify Functions
 - Dashboard with KPI cards, attention panels, financial snapshot, and action items
 - Projects management with payment tracking and countdown alerts
 - Professional Invoicing with line items, tax, discounts, and branded preview
@@ -16,10 +16,40 @@ Internal control center for NBK Business Solutions to manage client projects, in
 - Search functionality on all major pages
 
 ## Deployment (Netlify)
-- `netlify.toml` configured for SPA routing
+- `netlify.toml` configured for SPA routing and functions
 - `public/_redirects` as fallback
 - Build command: `npm run build`
 - Publish directory: `dist`
+- Functions directory: `netlify/functions`
+
+## Backend Architecture (Supabase + Netlify Functions)
+
+### Database (Supabase PostgreSQL)
+- Schema file: `supabase/schema.sql`
+- Tables: clients, email_accounts, projects, invoices, invoice_items, ai_subscriptions, action_items, project_logs, business_branding
+- RLS enabled with deny-all policies (service role bypasses)
+- All relationships use proper foreign keys (no denormalized names)
+
+### API Endpoints (Netlify Functions)
+- `/.netlify/functions/clients` - Client management
+- `/.netlify/functions/email-accounts` - Email accounts CRUD
+- `/.netlify/functions/projects` - Projects with JOIN to clients/emails
+- `/.netlify/functions/invoices` - Invoices with line items
+- `/.netlify/functions/ai-subscriptions` - AI tool subscriptions
+- `/.netlify/functions/actions` - Action items
+- `/.netlify/functions/project-logs` - Project activity logs
+- `/.netlify/functions/branding` - Business branding config
+
+### Environment Variables (Netlify)
+```
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+```
+
+### Data Migration
+- Script: `scripts/migrate-to-supabase.ts`
+- Export localStorage data using browser console
+- Import into Supabase with proper ID mapping
 
 ## Recent Changes (2026-01-27)
 

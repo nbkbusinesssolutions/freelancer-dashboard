@@ -80,6 +80,7 @@ export async function mockApiFetchJson<T>(path: string, init?: RequestInit): Pro
     if (parts.length === 1 && method === "POST") {
       const created: ProjectItem = {
         id: newId("pr"),
+        clientId: body?.clientId ?? null,
         clientName: String(body?.clientName || "").trim(),
         projectName: String(body?.projectName || "").trim(),
         domainName: String(body?.domainName || "").trim(),

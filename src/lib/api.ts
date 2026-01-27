@@ -10,6 +10,13 @@ function getApiBaseUrl() {
   const envBase = (import.meta as any).env?.VITE_API_BASE_URL?.toString?.() || "";
   // Runtime override for Lovable preview / non-env setups.
   const runtimeBase = typeof window !== "undefined" ? window.localStorage.getItem("externalApiBaseUrl") || "" : "";
+  // When deployed to Netlify, use the functions API
+  if (typeof window !== "undefined" && !runtimeBase && !envBase) {
+    const hostname = window.location.hostname;
+    if (hostname.includes("netlify.app") || hostname.includes("netlify.live")) {
+      return "/.netlify/functions";
+    }
+  }
   return runtimeBase || envBase;
 }
 

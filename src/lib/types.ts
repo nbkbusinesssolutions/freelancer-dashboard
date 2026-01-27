@@ -50,8 +50,18 @@ export type EmailAccountItem = {
   tags?: string[] | null;
 };
 
+export type ClientItem = {
+  id: string;
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  notes?: string | null;
+  createdAt?: string;
+};
+
 export type ProjectItem = {
   id: string;
+  clientId?: string | null;
   clientName: string;
   projectName: string;
   domainName: string;
@@ -80,6 +90,7 @@ export type SubscriptionComputedStatus = "Active" | "Expiring Soon" | "Expired" 
 
 export type AISubscriptionItem = {
   id: string;
+  projectId?: string | null;
   toolName: string;
   platform: Platform;
   platformOther?: string | null;
@@ -89,6 +100,7 @@ export type AISubscriptionItem = {
   startDate?: string | null;
   endDate?: string | null;
   cancelByDate?: string | null;
+  cost?: number | null;
   manualStatus?: SubscriptionManualStatus;
   notes?: string | null;
   attentionState?: AttentionState | null;
@@ -110,9 +122,11 @@ export type InvoiceItem = {
   invoiceNumber: string;
   invoiceDate: string;
   dueDate?: string | null;
+  clientId?: string | null;
   clientName: string;
   clientEmail?: string | null;
   clientAddress?: string | null;
+  projectId?: string | null;
   projectName?: string | null;
   lineItems: InvoiceLineItem[];
   subtotal: number;
