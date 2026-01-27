@@ -1,0 +1,189 @@
+Denormalized names (client_name, project_name) in relational tables
+
+Invoices linked to clients via name instead of ID
+
+Security assumption: “RLS disabled + service key forever”
+
+These are not theoretical issues. They will cause:
+
+Data inconsistency
+
+Painful refactors
+
+Migration headaches
+
+Silent bugs
+
+The good news:
+✅ These are easy to fix now, impossible later.
+
+2️⃣ REQUIRED CORRECTIONS (NON-NEGOTIABLE)
+🔴 CORRECTION #1: REMOVE DENORMALIZED NAMES
+❌ Current (Problematic)
+projects.client_name
+invoices.client_name
+invoices.project_name
+
+Why this is dangerous
+
+Client name changes → invoices break
+
+Typos create orphan records
+
+No referential integrity
+
+Impossible to enforce consistency
+
+Databases exist to prevent this exact problem.
+
+✅ Correct Design
+
+Use IDs only, derive names at query time.
+
+projects.client_id → clients.id
+invoices.client_id → clients.id
+invoices.project_id → projects.id
+
+
+Frontend already fetches related data — this costs you nothing.
+
+🔴 CORRECTION #2: INVOICES MUST NOT LINK “VIA NAME”
+
+Your current relationship:
+
+clients ── invoices (via client_name)
+
+
+This is not acceptable in production.
+
+✅ Correct relationship
+clients (id) ── invoices.client_id
+projects (id) ── invoices.project_id (optional)
+
+
+This gives you:
+
+Retainers (invoice without project)
+
+Project invoices
+
+Clean joins
+
+Zero ambiguity
+
+🔴 CORRECTION #3: SECURITY MODEL MUST BE FUTURE-SAFE
+
+Your current statement:
+
+“RLS disabled, all access via service key”
+
+This is OK for now, but dangerous if not framed correctly.
+
+✅ Correct framing
+
+RLS enabled
+
+Policies set to deny all
+
+Service role bypasses RLS
+
+Auth can be added later without schema changes
+
+This prevents accidental exposure if someone later enables anon access.
+
+3️⃣ FINAL GREEN-LIGHT ARCHITECTURE (APPROVED)
+
+Below is the corrected, production-safe version of your plan.
+
+✅ FINAL DATABASE SCHEMA (APPROVED)
+clients
+id uuid PK
+name text NOT NULL
+email text
+phone text
+notes text
+created_at timestamptz DEFAULT now()
+
+email_accounts
+id uuid PK
+email text UNIQUE NOT NULL
+password text NOT NULL
+provider text NOT NULL
+status text NOT NULL
+tags text[]
+notes text
+created_at timestamptz DEFAULT now()
+
+projects
+id uuid PK
+client_id uuid FK → clients.id
+project_name text NOT NULL
+domain_name text
+domain_provider text
+domain_email_id uuid FK → email_accounts.id
+domain_username text
+deployment_email_id uuid FK → email_accounts.id
+deployment_username text
+hosting_platform text DEFAULT 'Netlify'
+domain_purchase_date date
+domain_renewal_date date
+hosting_start_date date
+hosting_renewal_date date
+status text NOT NULL
+project_amount numeric
+payment_status text
+pending_amount numeric
+completed_date date
+attention_state text
+notes text
+created_at timestamptz DEFAULT now()
+
+invoices
+id uuid PK
+invoice_number text UNIQUE NOT NULL
+client_id uuid FK → clients.id
+project_id uuid FK → projects.id NULL
+invoice_date date NOT NULL
+due_date date
+subtotal numeric NOT NULL
+tax_rate numeric
+discount numeric
+total numeric NOT NULL
+paid_amount numeric
+payment_status text NOT NULL
+notes text
+created_at timestamptz DEFAULT now()
+
+invoice_items
+id uuid PK
+invoice_id uuid FK → invoices.id
+description text NOT NULL
+quantity numeric NOT NULL
+rate numeric NOT NULL
+amount numeric NOT NULL
+
+ai_subscriptions
+id uuid PK
+project_id uuid FK → projects.id NULL
+tool_name text NOT NULL
+subscription_type text NOT NULL
+email_id uuid FK → email_accounts.id
+cancel_by_date date
+cost numeric
+notes text
+created_at timestamptz DEFAULT now()
+
+4️⃣ EVERYTHING ELSE IN YOUR PLAN IS ✅ CORRECT
+
+These parts are approved without change:
+
+✅ Supabase + Netlify Functions
+✅ No frontend DB access
+✅ Serverless CRUD APIs
+✅ Migration via JSON
+✅ API-driven frontend switch
+✅ Cost estimates
+✅ Folder structure
+✅ Environment variable handling
+
+You clearly understand production systems — this just needed tightening.

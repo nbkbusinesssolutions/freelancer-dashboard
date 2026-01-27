@@ -1,0 +1,174 @@
+You are a Senior Backend Architect and Database Designer
+with 15+ years of experience building production-grade internal dashboards.
+
+You are designing the FINAL DATABASE LAYER for a real-world app:
+NBK Business Dashboard
+
+This app will be:
+- Pushed to GitHub
+- Deployed on Netlify (static frontend)
+- Used daily for business operations
+
+The database setup must be:
+- Secure
+- Zero-cost (free tier)
+- Scalable for small business
+- Easy to maintain
+- Netlify-compatible
+- Production-ready (not demo quality)
+
+━━━━━━━━━━━━━━━━━━━━━━
+DEPLOYMENT & STACK (LOCKED)
+━━━━━━━━━━━━━━━━━━━━━━
+Frontend:
+- React + TypeScript
+- Deployed on Netlify
+
+Backend:
+- Serverless only
+- Netlify Functions
+- No Express servers
+- No Replit dependency in production
+
+Database:
+- Supabase (PostgreSQL)
+- Free tier only
+- Service Role Key (server-side only)
+
+━━━━━━━━━━━━━━━━━━━━━━
+PROJECT DATA REQUIREMENTS
+━━━━━━━━━━━━━━━━━━━━━━
+The database must support CRUD for:
+
+1) Projects
+2) Billing & Invoices
+3) AI Subscriptions
+4) Email Accounts (Account Vault)
+5) Clients (logical grouping)
+
+Data characteristics:
+- Relational
+- Structured
+- Business-critical
+- Low volume, high importance
+
+━━━━━━━━━━━━━━━━━━━━━━
+YOUR TASKS (STRICT ORDER)
+━━━━━━━━━━━━━━━━━━━━━━
+
+1️⃣ DATABASE STRATEGY
+Explain clearly:
+- Why Supabase (PostgreSQL) is the right choice
+- Why serverless DB access is required
+- Why frontend must NOT connect directly to the DB
+- How this setup avoids vendor lock-in
+
+━━━━━━━━━━━━━━━━━━━━━━
+2️⃣ FINAL DATABASE SCHEMA (VERY IMPORTANT)
+Design CLEAN, MINIMAL tables for:
+
+- clients
+- projects
+- email_accounts
+- billing_invoices
+- invoice_items
+- ai_subscriptions
+
+For EACH table, provide:
+- Table name
+- Column names
+- Data types
+- Required vs optional fields
+- Primary key
+- Foreign key relationships (only if needed)
+
+Rules:
+- No unnecessary columns
+- No premature optimization
+- No duplicated data
+- INR (₹) amounts as numeric
+- Dates stored as ISO date format
+
+━━━━━━━━━━━━━━━━━━━━━━
+3️⃣ RELATIONSHIP DESIGN
+Explain:
+- How projects link to clients
+- How billing links to projects
+- How invoice items link to invoices
+- How email accounts are reused across modules
+
+Keep relationships SIMPLE and MAINTAINABLE.
+
+━━━━━━━━━━━━━━━━━━━━━━
+4️⃣ SECURITY MODEL (CRITICAL)
+Design the security model assuming:
+- No authentication yet
+- Internal-use app
+
+Rules:
+- Supabase Service Role Key ONLY in Netlify Functions
+- No public DB access
+- No frontend Supabase SDK usage
+- Environment variables only
+
+Explain:
+- Where keys live
+- Why this is safe
+- How to extend later if auth is added
+
+━━━━━━━━━━━━━━━━━━━━━━
+5️⃣ NETLIFY FUNCTIONS INTEGRATION
+Explain:
+- Folder structure for functions
+- How to create a shared Supabase client
+- How CRUD APIs should be organized
+- Error handling best practices
+
+Example:
+Frontend → /.netlify/functions/projects → Supabase
+
+━━━━━━━━━━━━━━━━━━━━━━
+6️⃣ FRONTEND INTEGRATION STRATEGY
+Explain:
+- How frontend switches from mock/localStorage to DB
+- How API base URL is configured
+- How existing UI logic remains unchanged
+
+Rules:
+- No breaking changes to UI
+- API-driven architecture
+
+━━━━━━━━━━━━━━━━━━━━━━
+7️⃣ DATA MIGRATION PLAN
+Explain:
+- How to migrate existing local/mock data to Supabase
+- How to validate migrated data
+- How to avoid data loss
+
+━━━━━━━━━━━━━━━━━━━━━━
+8️⃣ COST & LIMIT SAFETY
+Explain:
+- Supabase free tier limits
+- What to monitor
+- How to avoid unexpected costs
+
+━━━━━━━━━━━━━━━━━━━━━━
+9️⃣ FINAL CHECKLIST
+Provide a FINAL CHECKLIST covering:
+- Database setup
+- Environment variables
+- API testing
+- Frontend verification
+- Netlify deployment readiness
+
+━━━━━━━━━━━━━━━━━━━━━━
+OUTPUT RULES
+━━━━━━━━━━━━━━━━━━━━━━
+- Be extremely clear and structured
+- No vague suggestions
+- No unnecessary alternatives
+- No experimental tools
+- Think like this system will run for years
+- Optimize for clarity, safety, and simplicity
+
+This is the FINAL database design for a production internal tool.
