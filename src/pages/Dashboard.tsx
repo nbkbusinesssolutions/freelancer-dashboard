@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { formatISO } from "date-fns";
+import { formatISO, format, parseISO } from "date-fns";
+import { CheckCircle2, Circle, Calendar } from "lucide-react";
 
 import { useAISubscriptions, useProjects } from "@/hooks/useApiData";
 import { computeSubscriptionStatus, getDaysLeft } from "@/lib/subscriptionStatus";
@@ -14,13 +15,17 @@ import {
   type DateReminderStage,
 } from "@/lib/dateExpiry";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useIncompleteActions } from "@/hooks/use-actions";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import DashboardAttentionPanel from "@/components/dashboard/DashboardAttentionPanel";
 import DashboardKpiGrid, { type DashboardKpi } from "@/components/dashboard/DashboardKpiGrid";
+import FinancialSnapshot from "@/components/financial/FinancialSnapshot";
+import { AttentionBadge } from "@/components/attention/AttentionStateSelector";
 
 function stageLabel(stage: ReminderStage) {
   // Back-compat helper for AI reminder stages.
@@ -32,9 +37,27 @@ export default function DashboardPage() {
   const isMobile = useIsMobile();
   const projectsQ = useProjects();
   const subsQ = useAISubscriptions();
+  const { actions: incompleteActions } = useIncompleteActions();
 
   const projects = projectsQ.data?.items ?? [];
   const subs = subsQ.data?.items ?? [];
+
+  const itemsNeedingAttention = [
+    ...projects.filter((p) => p.attentionState && p.attentionState !== "stable").map((p) => ({
+      id: p.id,
+      type: "project" as const,
+      name: `${p.clientName} — ${p.projectName}`,
+      attentionState: p.attentionState!,
+      link: `/projects/${p.id}`,
+    })),
+    ...subs.filter((s) => s.attentionState && s.attentionState !== "stable").map((s) => ({
+      id: s.id,
+      type: "ai-subscription" as const,
+      name: s.toolName,
+      attentionState: s.attentionState!,
+      link: `/ai-subscriptions?focus=${s.id}`,
+    })),
+  ];
 
   const computedSubs = subs
     .map((s) => {
@@ -412,6 +435,76 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </section>
+
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <FinancialSnapshot />
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Action Items</CardTitle>
+            <CardDescription>Incomplete tasks sorted by due date</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {incompleteActions.length === 0 ? (
+              <div className="text-sm text-muted-foreground">No pending action items</div>
+            ) : (
+              <div className="space-y-2">
+                {incompleteActions.slice(0, 5).map((action) => (
+                  <div key={action.id} className="flex items-start gap-3 rounded-md border p-3">
+                    <Circle className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm">{action.text}</div>
+                      <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className="capitalize">{action.context.type}</span>
+                        {action.dueDate && (
+                          <>
+                            <span>•</span>
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {format(parseISO(action.dueDate), "MMM d")}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {incompleteActions.length > 5 && (
+                  <div className="text-xs text-muted-foreground text-center pt-2">
+                    +{incompleteActions.length - 5} more items
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </section>
+
+      {itemsNeedingAttention.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Items Needing Attention</CardTitle>
+            <CardDescription>Projects and subscriptions you've flagged for review</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {itemsNeedingAttention.map((item) => (
+                <Link
+                  key={`${item.type}-${item.id}`}
+                  to={item.link}
+                  className="flex items-center justify-between rounded-md border p-3 hover:bg-muted/50 transition-colors"
+                >
+                  <div>
+                    <div className="text-sm font-medium">{item.name}</div>
+                    <div className="text-xs text-muted-foreground capitalize">{item.type.replace("-", " ")}</div>
+                  </div>
+                  <AttentionBadge value={item.attentionState} />
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </main>
   );
 }

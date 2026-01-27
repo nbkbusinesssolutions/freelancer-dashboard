@@ -12,7 +12,7 @@ function toSparkline(values: number[], maxPoints = 14): MicroSparklinePoint[] {
 
 export type DashboardKpi = {
   title: string;
-  value: number;
+  value: number | string;
   actionLabel: string;
   actionTo: string;
   sparkline?: number[];

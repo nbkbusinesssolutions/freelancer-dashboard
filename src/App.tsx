@@ -7,6 +7,8 @@ import AppShell from "@/components/layout/AppShell";
 import DashboardPage from "@/pages/Dashboard";
 import AccountVaultPage from "@/pages/AccountVault";
 import ProjectsPage from "@/pages/Projects";
+import ProjectDetailPage from "@/pages/ProjectDetail";
+import ClientDetailPage from "@/pages/ClientDetail";
 import ServicesPage from "@/pages/Services";
 import AISubscriptionsPage from "@/pages/AISubscriptions";
 import SettingsPage from "@/pages/Settings";
@@ -25,6 +27,8 @@ const App = () => (
             <Route path="/" element={<DashboardPage />} />
             <Route path="/account-vault" element={<AccountVaultPage />} />
             <Route path="/projects" element={<ProjectsPage />} />
+            <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
+            <Route path="/clients/:clientId" element={<ClientDetailPage />} />
             <Route path="/services" element={<ServicesPage />} />
             <Route path="/ai-subscriptions" element={<AISubscriptionsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
