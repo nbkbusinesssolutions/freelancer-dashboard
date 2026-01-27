@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
+import { DollarSign } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,16 +20,26 @@ export type DashboardExpiryRow = {
   status: "Active" | "Expiring Soon" | "Expired";
 };
 
+export type PendingPaymentRow = {
+  id: string;
+  clientName: string;
+  projectName: string;
+  pendingAmount: number;
+  paymentStatus: "Pending" | "Partial";
+};
+
 export default function DashboardAttentionPanel({
   reminder,
   upcomingAi,
   upcomingDomains,
   upcomingHosting,
+  pendingPayments = [],
 }: {
   reminder: DashboardReminderHit | null;
   upcomingAi: DashboardExpiryRow[];
   upcomingDomains: DashboardExpiryRow[];
   upcomingHosting: DashboardExpiryRow[];
+  pendingPayments?: PendingPaymentRow[];
 }) {
   const navigate = useNavigate();
 
@@ -145,6 +156,37 @@ export default function DashboardAttentionPanel({
               <div className="rounded-md border p-3 text-sm text-muted-foreground">No upcoming hosting renewals.</div>
             )}
           </div>
+
+          {pendingPayments.length > 0 && (
+            <>
+              <Separator />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <DollarSign className="h-4 w-4 text-destructive" />
+                    Pending Payments
+                  </div>
+                  <Button variant="outline" className="min-h-11" onClick={() => navigate("/projects")}>Open</Button>
+                </div>
+                <div className="space-y-2" data-testid="pending-payments-list">
+                  {pendingPayments.slice(0, 6).map((p) => (
+                    <div key={p.id} data-testid={`card-pending-payment-${p.id}`} className="flex items-start justify-between gap-3 rounded-md border border-destructive/30 bg-destructive/5 p-3">
+                      <div className="min-w-0">
+                        <div data-testid={`text-client-${p.id}`} className="nbk-break-anywhere font-medium">{p.clientName}</div>
+                        <div className="mt-1 text-xs text-muted-foreground">{p.projectName}</div>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <Badge data-testid={`badge-payment-${p.id}`} variant={p.paymentStatus === "Pending" ? "destructive" : "secondary"}>
+                          {p.paymentStatus}
+                        </Badge>
+                        <span data-testid={`text-amount-${p.id}`} className="text-sm font-medium text-destructive">${p.pendingAmount}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 

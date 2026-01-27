@@ -7,7 +7,7 @@ import { useSearchParams } from "react-router-dom";
 
 import { toast } from "@/hooks/use-toast";
 import { useAccountVault, useDeleteProject, useProjects, useUpsertProject } from "@/hooks/useApiData";
-import type { ProjectItem, ProjectStatus } from "@/lib/types";
+import type { ProjectItem, ProjectStatus, ProjectPaymentStatus } from "@/lib/types";
 import { computeDateExpiry } from "@/lib/dateExpiry";
 
 import { Button } from "@/components/ui/button";
@@ -44,6 +44,7 @@ function uniqCaseInsensitive(values: string[]) {
 }
 
 const STATUSES: ProjectStatus[] = ["Active", "Completed", "On Hold"];
+const PAYMENT_STATUSES: ProjectPaymentStatus[] = ["Paid", "Pending", "Partial"];
 
 const schema = z.object({
   clientName: z.string().trim().min(1).max(100),
@@ -60,12 +61,17 @@ const schema = z.object({
   hostingRenewalDate: z.string().optional(),
   status: z.enum(STATUSES as [ProjectStatus, ...ProjectStatus[]]),
   notes: z.string().trim().max(2000).optional(),
+  projectAmount: z.string().trim().optional(),
+  paymentStatus: z.enum(PAYMENT_STATUSES as [ProjectPaymentStatus, ...ProjectPaymentStatus[]]).optional(),
+  completedDate: z.string().optional(),
+  pendingAmount: z.string().trim().optional(),
 });
 
 export default function ProjectsPage() {
   const [params] = useSearchParams();
   const filterStatus = (params.get("status") as ProjectStatus | null) ?? null;
   const filterRenewal = (params.get("renewal") as "domain" | "hosting" | "overdue" | null) ?? null;
+  const filterPayment = params.get("payment") ?? null;
 
   const vaultQ = useAccountVault();
   const projectsQ = useProjects();
@@ -76,6 +82,12 @@ export default function ProjectsPage() {
   const items = projectsQ.data?.items ?? [];
   const filtered = items.filter((p) => {
     if (filterStatus && p.status !== filterStatus) return false;
+    if (filterPayment === "pending") {
+      const ps = p.paymentStatus;
+      const pending = p.pendingAmount;
+      if ((ps === "Pending" || ps === "Partial") && pending && pending > 0) return true;
+      return false;
+    }
     if (!filterRenewal) return true;
 
     const domain = computeDateExpiry(p.domainRenewalDate, 30);
@@ -117,6 +129,10 @@ export default function ProjectsPage() {
       hostingRenewalDate: "",
       status: "Active",
       notes: "",
+      projectAmount: "",
+      paymentStatus: undefined,
+      completedDate: "",
+      pendingAmount: "",
     },
   });
 
@@ -127,6 +143,11 @@ export default function ProjectsPage() {
       form.setValue("hostingStartDate", domainPurchaseDate);
     }
   }, [domainPurchaseDate, form]);
+
+  function parseMoney(input?: string) {
+    const n = Number(String(input ?? "").replace(/[^0-9.]/g, ""));
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }
 
   async function onSubmit(values: z.infer<typeof schema>) {
     try {
@@ -145,6 +166,10 @@ export default function ProjectsPage() {
         hostingRenewalDate: values.hostingRenewalDate || null,
         status: values.status,
         notes: values.notes?.trim() || null,
+        projectAmount: parseMoney(values.projectAmount),
+        paymentStatus: values.paymentStatus || null,
+        completedDate: values.completedDate || null,
+        pendingAmount: parseMoney(values.pendingAmount),
       });
       toast({ title: "Project saved" });
       setOpen(false);
@@ -437,6 +462,76 @@ export default function ProjectsPage() {
                           addLabel={() => "Select one of the standard project status values"}
                           className="min-h-11"
                         />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="projectAmount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Project Amount</FormLabel>
+                      <FormControl>
+                        <Input className="min-h-11" inputMode="decimal" placeholder="e.g. 5000" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="paymentStatus"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Payment Status</FormLabel>
+                      <FormControl>
+                        <CreatableCombobox
+                          value={field.value ?? ""}
+                          onChange={(v) => {
+                            const match = PAYMENT_STATUSES.find((s) => s.toLowerCase() === v.trim().toLowerCase());
+                            if (match) field.onChange(match);
+                            else if (!v.trim()) field.onChange(undefined);
+                          }}
+                          options={PAYMENT_STATUSES}
+                          placeholder="Select payment status..."
+                          searchPlaceholder="Search status..."
+                          addLabel={() => "Select one of the payment status values"}
+                          className="min-h-11"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="completedDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Completed Date</FormLabel>
+                      <FormControl>
+                        <Input className="min-h-11" type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="pendingAmount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Pending Amount</FormLabel>
+                      <FormControl>
+                        <Input className="min-h-11" inputMode="decimal" placeholder="e.g. 2000" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

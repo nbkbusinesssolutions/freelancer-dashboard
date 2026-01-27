@@ -9,6 +9,7 @@ export type Platform =
   | "Other";
 
 export type ProjectStatus = "Active" | "Completed" | "On Hold";
+export type ProjectPaymentStatus = "Paid" | "Pending" | "Partial";
 export type SubscriptionType = "Free Trial" | "Paid";
 
 export type AccountVaultItem = {
@@ -39,6 +40,10 @@ export type ProjectItem = {
   hostingRenewalDate?: string | null; // ISO date
   status: ProjectStatus;
   notes?: string | null;
+  projectAmount?: number | null;
+  paymentStatus?: ProjectPaymentStatus | null;
+  completedDate?: string | null; // ISO date
+  pendingAmount?: number | null;
 };
 
 export type SubscriptionManualStatus = "Cancelled" | null;

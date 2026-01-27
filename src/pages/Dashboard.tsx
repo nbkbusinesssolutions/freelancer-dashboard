@@ -195,6 +195,23 @@ export default function DashboardPage() {
     }
   }, [reminderHit, todayIso]);
 
+  const pendingPayments = projects
+    .filter((p) => {
+      const status = p.paymentStatus;
+      const pending = p.pendingAmount;
+      return (status === "Pending" || status === "Partial") && pending && pending > 0;
+    })
+    .map((p) => ({
+      id: p.id,
+      clientName: p.clientName,
+      projectName: p.projectName,
+      pendingAmount: p.pendingAmount!,
+      paymentStatus: p.paymentStatus as "Pending" | "Partial",
+    }))
+    .sort((a, b) => b.pendingAmount - a.pendingAmount);
+
+  const totalPending = pendingPayments.reduce((sum, p) => sum + p.pendingAmount, 0);
+
   const kpis: DashboardKpi[] = [
     {
       title: "Total Projects",
@@ -213,15 +230,12 @@ export default function DashboardPage() {
       tone: "muted",
     },
     {
-      title: "AI Expiring Soon",
-      value: expiringSoon.length,
+      title: "Pending Payments",
+      value: `$${totalPending.toLocaleString()}`,
       actionLabel: "Review",
-      actionTo: "/ai-subscriptions?status=Expiring%20Soon",
-      sparkline: computedSubs
-        .filter((s) => s.daysLeft !== null && s.daysLeft <= 14)
-        .slice(0, 14)
-        .map((s) => Math.max(0, 14 - (s.daysLeft ?? 14))),
-      tone: "muted",
+      actionTo: "/projects?payment=pending",
+      sparkline: pendingPayments.slice(0, 14).map((p) => Math.min(10, p.pendingAmount / 1000)),
+      tone: totalPending > 0 ? "destructive" : "muted",
     },
     {
       title: "Expired Items",
@@ -260,6 +274,7 @@ export default function DashboardPage() {
         upcomingAi={upcoming7}
         upcomingDomains={domainUpcoming30}
         upcomingHosting={hostingUpcoming30}
+        pendingPayments={pendingPayments}
       />
 
       <DashboardKpiGrid items={kpis} />
