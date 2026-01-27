@@ -153,12 +153,16 @@ Internal control center for NBK Business Solutions to manage client projects, in
 1. Go to **Email Accounts** and add the email accounts used for domain providers (Namecheap, GoDaddy) and deployment platforms (Netlify, etc.)
 2. Then go to **Projects** to create projects and link them to your email accounts
 
+## Logo & Favicon (Implemented)
+- `logo-full.webp` - Original NBK logo
+- `logo-icon.png` (64x64) - Sidebar icon
+- `logo-192.png` (192x192) - PWA icon
+- `logo-512.png` (512x512) - PWA icon
+- `favicon.ico` - Browser favicon
+- `favicon-16.png`, `favicon-32.png` - Favicon sizes
+
 ## TODO Before Launch
-1. Add actual NBK logo images to public folder:
-   - `logo-icon.png` (64x64) - Sidebar icon
-   - `logo-192.png` (192x192) - PWA icon
-   - `logo-512.png` (512x512) - PWA icon
-2. Set `VITE_API_BASE_URL` in Netlify if using external API
+1. Set `VITE_API_BASE_URL` in Netlify if using external API
 
 ## User Preferences
 - Show dates prominently with countdown alerts

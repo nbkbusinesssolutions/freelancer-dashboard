@@ -17,7 +17,7 @@ export default defineConfig(() => ({
     react(),
     VitePWA({
       registerType: "prompt",
-      includeAssets: ["favicon.ico", "robots.txt", "logo-icon.png", "logo-192.png", "logo-512.png"],
+      includeAssets: ["favicon.ico", "favicon-16.png", "favicon-32.png", "robots.txt", "logo-icon.png", "logo-192.png", "logo-512.png", "logo-full.webp"],
       manifest: {
         name: "NBK Control Center",
         short_name: "NBK Control",
