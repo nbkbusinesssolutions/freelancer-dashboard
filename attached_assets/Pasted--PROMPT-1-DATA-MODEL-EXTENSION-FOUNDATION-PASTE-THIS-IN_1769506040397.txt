@@ -1,0 +1,300 @@
+🟥 PROMPT 1 — DATA MODEL EXTENSION (FOUNDATION)
+
+👉 PASTE THIS INTO REPLIT AI
+
+You are a senior frontend architect working inside an existing React + TypeScript app.
+
+Your task is to extend the existing data models cleanly to support PHASE 1 features,
+WITHOUT breaking existing functionality.
+
+CONTEXT:
+- The app already has Account Vault, Projects, AI Subscriptions, Services & Billing
+- Uses localStorage (mock) + optional external API
+- Uses TanStack React Query
+- Uses TypeScript interfaces for models
+
+TASK:
+Add the following new concepts in a minimal, future-safe way:
+
+1) ActionItem
+Fields (locked):
+- id: string
+- text: string
+- dueDate?: string
+- completed: boolean
+- context: { type: 'project' | 'client'; id: string }
+
+2) AttentionState (enum / union):
+- 'stable'
+- 'review'
+- 'action'
+- 'risk'
+
+3) Extend existing entities to include:
+- Project.attentionState?: AttentionState
+- AISubscription.attentionState?: AttentionState
+- Renewal.attentionState?: AttentionState (if applicable)
+
+RULES:
+- Do NOT refactor existing logic
+- Do NOT introduce global state libraries
+- Follow existing patterns used in the app
+- Update TypeScript types/interfaces only
+- Update mock API storage shape if required
+
+OUTPUT:
+- Updated type definitions
+- Notes on where data is stored (localStorage keys)
+- No UI changes yet
+
+
+✅ Result:
+Your app now understands Actions + Attention, but nothing renders yet.
+
+🟥 PROMPT 2 — UNIFIED PROJECT DETAIL PAGE (CORE FEATURE)
+
+👉 PASTE THIS INTO REPLIT AI
+
+You are a senior product-focused frontend engineer.
+
+Implement a Unified Project Detail page that acts as a
+single source of truth for each project.
+
+CONTEXT:
+- Projects list already exists
+- Routing uses React Router
+- AppShell layout already exists
+
+TASK:
+Create a new route and page:
+
+Route:
+- /projects/:projectId
+
+Page:
+- ProjectDetail.tsx
+
+This page must aggregate, in ONE place:
+1) Project core info (read-only summary)
+2) Linked Account Vault emails
+3) Linked AI subscriptions
+4) Billing history related to this project
+5) Inline Action Items (project context)
+6) Project Log (if present)
+
+RULES:
+- No new API calls beyond existing hooks
+- Reuse existing hooks (useProjects, useAISubscriptions, etc.)
+- Use composition, not giant components
+- Mobile-first layout
+- Clean visual hierarchy (sections, not tabs unless necessary)
+
+UI PRINCIPLES:
+- This is a “thinking page”, not a form
+- Readability > density
+- Each section should answer a question
+
+OUTPUT:
+- New ProjectDetail page
+- Routing update
+- Clear component structure
+
+
+✅ Result:
+You can click a project → see everything that matters, without hopping pages.
+
+🟥 PROMPT 3 — ACTION ITEMS (CONTEXTUAL, NOT TODO LIST)
+
+👉 PASTE THIS INTO REPLIT AI
+
+You are implementing a contextual Action Items system.
+
+This is NOT a global todo list.
+
+CONTEXT:
+- Actions must always belong to a Project or Client
+- Stored locally (localStorage)
+- Lightweight, no scheduling engine
+
+TASK:
+Implement Action Items with:
+- Inline display inside ProjectDetail and ClientDetail
+- Ability to add, complete, and delete actions
+- No separate "task manager" UI
+
+Also add:
+- A simple Actions overview page for triage
+
+Rules:
+- No priorities
+- No tags
+- No categories
+- Just text, due date, completed state
+
+Dashboard integration:
+- Show only incomplete actions
+- Sorted by due date
+
+OUTPUT:
+- useActions hook
+- ActionItem UI components
+- Dashboard integration
+
+
+✅ Result:
+You capture intent in context, not scattered notes.
+
+🟥 PROMPT 4 — ATTENTION STATE (HUMAN OVERRIDE SYSTEM)
+
+👉 PASTE THIS INTO REPLIT AI
+
+Implement a manual Attention State system.
+
+This is a HUMAN OVERRIDE, not automation.
+
+CONTEXT:
+- AttentionState enum already exists
+- Used for Projects, AI Subscriptions, Renewals
+
+TASK:
+Add:
+- A small Attention State selector (dropdown or badge control)
+- Allowed states:
+  - Stable
+  - Review Soon
+  - Action Required
+  - At Risk
+
+RULES:
+- Default is Stable
+- User can manually override at any time
+- No auto-calculation logic for now
+
+Dashboard behavior:
+- Only show items that are NOT Stable
+- Group by Attention State
+
+OUTPUT:
+- Attention selector UI
+- State persistence
+- Dashboard logic update
+
+
+✅ Result:
+Your dashboard shows what you feel is risky, not just what dates say.
+
+🟧 PROMPT 5 — CLIENT DOSSIER (READ-ONLY INTELLIGENCE)
+
+👉 PASTE THIS INTO REPLIT AI
+
+Implement a Client Dossier page.
+
+This is a READ-ONLY intelligence hub, not a CRM.
+
+Route:
+- /clients/:clientId
+
+This page should show:
+- Client contact info
+- All projects for this client
+- Billing summary (total + recent)
+- Open Action Items
+
+RULES:
+- No pipelines
+- No sales stages
+- No follow-up automation
+
+UI GOAL:
+- Answer “Who is this client and what’s happening with them?” in under 10 seconds
+
+OUTPUT:
+- ClientDetail page
+- Routing update
+- Reuse existing data sources
+
+
+✅ Result:
+You’re never caught off-guard on a client call.
+
+🟧 PROMPT 6 — FINANCIAL SNAPSHOT (MINIMAL & HONEST)
+
+👉 PASTE THIS INTO REPLIT AI
+
+Add a minimal Financial Snapshot.
+
+CONTEXT:
+- Services & Billing data is local-only
+- This is not accounting software
+
+TASK:
+Compute and display:
+- Revenue this month
+- Upcoming costs (next 30 days)
+
+RULES:
+- No charts unless they improve decisions
+- No projections
+- No historical analytics
+
+Dashboard placement:
+- Small, calm section
+- One glance clarity
+
+OUTPUT:
+- Financial computation helpers
+- Dashboard UI section
+
+
+✅ Result:
+You know where money stands without stress or overthinking.
+
+🟨 PROMPT 7 — PROJECT LOG (OPTIONAL, KEEP SIMPLE)
+
+👉 PASTE THIS ONLY IF YOU WANT IT
+
+Implement a Project Log feature.
+
+CONTEXT:
+- Chronological text-only log
+- Per project
+- Stored locally
+
+Used for:
+- Decisions made
+- Client discussions
+- Reasoning context
+
+RULES:
+- No editing past entries
+- Append-only
+- Timestamped
+- Simple textarea input
+
+OUTPUT:
+- ProjectLog component
+- Local persistence
+
+✅ FINAL RULES (DO NOT BREAK THESE)
+
+If a feature increases mental load → don’t add it
+
+If it needs explanation → it’s too complex
+
+If it duplicates memory → remove it
+
+Calm > clever
+
+Clarity > features
+
+🧠 WHAT YOU’LL HAVE AFTER THIS
+
+A true control center
+
+Zero module hopping
+
+Fewer forgotten things
+
+Faster decisions
+
+A system that works with your brain
