@@ -1,34 +1,8 @@
-import express from "express";
-import cors from "cors";
-import { createClient } from "@supabase/supabase-js";
-import "dotenv/config";
+STEP 6: ADD CRUD ENDPOINTS (FINAL CODE)
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+Add below the debug route in index.js:
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
-);
-
-app.get("/health", (req, res) => {
-  res.json({ status: "ok" });
-});
-
-app.get("/debug/supabase", async (req, res) => {
-  const { data, error } = await supabase
-    .from("account_vault")
-    .select("*");
-
-  if (error) {
-    return res.status(500).json({ error: error.message });
-  }
-
-  res.json(data || []);
-});
-
-// Account Vault
+Account Vault
 app.get("/account-vault", async (req, res) => {
   const { data, error } = await supabase.from("account_vault").select("*");
   if (error) return res.status(500).json({ error: error.message });
@@ -61,7 +35,7 @@ app.delete("/account-vault/:id", async (req, res) => {
   res.json({ success: true });
 });
 
-// Projects
+Projects
 app.get("/projects", async (req, res) => {
   const { data, error } = await supabase.from("projects").select("*");
   if (error) return res.status(500).json({ error: error.message });
@@ -94,7 +68,7 @@ app.delete("/projects/:id", async (req, res) => {
   res.json({ success: true });
 });
 
-// AI Subscriptions
+AI Subscriptions
 app.get("/ai-subscriptions", async (req, res) => {
   const { data, error } = await supabase.from("ai_subscriptions").select("*");
   if (error) return res.status(500).json({ error: error.message });
@@ -127,9 +101,41 @@ app.delete("/ai-subscriptions/:id", async (req, res) => {
   res.json({ success: true });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on port ${PORT}`);
-});
+STEP 7: TEST APIs (CONFIRMATION)
 
-export { supabase };
+Test in browser or Postman:
+
+GET /account-vault
+GET /projects
+GET /ai-subscriptions
+
+
+Should return:
+
+[]
+
+
+Add data from frontend → refresh → data persists.
+
+✅ PHASE 4 — CONNECT FRONTEND
+
+In your frontend:
+
+Settings → API
+External API Base URL:
+https://<your-repl-name>.repl.co
+
+Use Mock API: OFF
+
+
+Now test:
+
+Add Account Vault email
+
+Create Project
+
+Add AI Subscription
+
+Refresh page → data still there
+
+🎉 DONE
