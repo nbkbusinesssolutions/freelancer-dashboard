@@ -101,20 +101,26 @@ function transformSubscription(row: any) {
   };
 }
 
+// Helper to convert empty strings to null (for UUID foreign keys)
+function toNullIfEmpty(val: any): any {
+  if (val === "" || val === undefined) return null;
+  return val;
+}
+
 function transformToDb(body: any) {
   return {
-    project_id: body.projectId || null,
+    project_id: toNullIfEmpty(body.projectId),
     tool_name: body.toolName,
-    platform: body.platform,
+    platform: toNullIfEmpty(body.platform),
     subscription_type: body.subscriptionType,
-    email_id: body.emailId || null,
-    password: body.password,
-    start_date: body.startDate || null,
-    end_date: body.endDate || null,
-    cancel_by_date: body.cancelByDate || null,
-    cost: body.cost,
-    manual_status: body.manualStatus,
-    attention_state: body.attentionState,
-    notes: body.notes,
+    email_id: toNullIfEmpty(body.emailId),
+    password: toNullIfEmpty(body.password),
+    start_date: toNullIfEmpty(body.startDate),
+    end_date: toNullIfEmpty(body.endDate),
+    cancel_by_date: toNullIfEmpty(body.cancelByDate),
+    cost: toNullIfEmpty(body.cost),
+    manual_status: toNullIfEmpty(body.manualStatus),
+    attention_state: toNullIfEmpty(body.attentionState),
+    notes: toNullIfEmpty(body.notes),
   };
 }

@@ -136,27 +136,33 @@ function transformProject(row: any) {
   };
 }
 
+// Helper to convert empty strings to null (for UUID foreign keys)
+function toNullIfEmpty(val: any): any {
+  if (val === "" || val === undefined) return null;
+  return val;
+}
+
 function transformToDb(body: any) {
   return {
-    client_id: body.clientId || null,
+    client_id: toNullIfEmpty(body.clientId),
     project_name: body.projectName,
-    domain_name: body.domainName || null,
-    domain_provider: body.domainProvider || null,
-    domain_email_id: body.domainEmailId || null,
-    domain_username: body.domainUsername || null,
-    deployment_email_id: body.deploymentEmailId || null,
-    deployment_username: body.deploymentUsername || null,
-    hosting_platform: body.hostingPlatform || null,
-    domain_purchase_date: body.domainPurchaseDate || null,
-    domain_renewal_date: body.domainRenewalDate || null,
-    hosting_start_date: body.hostingStartDate || null,
-    hosting_renewal_date: body.hostingRenewalDate || null,
+    domain_name: toNullIfEmpty(body.domainName),
+    domain_provider: toNullIfEmpty(body.domainProvider),
+    domain_email_id: toNullIfEmpty(body.domainEmailId),
+    domain_username: toNullIfEmpty(body.domainUsername),
+    deployment_email_id: toNullIfEmpty(body.deploymentEmailId),
+    deployment_username: toNullIfEmpty(body.deploymentUsername),
+    hosting_platform: toNullIfEmpty(body.hostingPlatform),
+    domain_purchase_date: toNullIfEmpty(body.domainPurchaseDate),
+    domain_renewal_date: toNullIfEmpty(body.domainRenewalDate),
+    hosting_start_date: toNullIfEmpty(body.hostingStartDate),
+    hosting_renewal_date: toNullIfEmpty(body.hostingRenewalDate),
     status: body.status,
-    project_amount: body.projectAmount || null,
-    payment_status: body.paymentStatus || null,
-    pending_amount: body.pendingAmount || null,
-    completed_date: body.completedDate || null,
-    attention_state: body.attentionState || null,
-    notes: body.notes,
+    project_amount: toNullIfEmpty(body.projectAmount),
+    payment_status: toNullIfEmpty(body.paymentStatus),
+    pending_amount: toNullIfEmpty(body.pendingAmount),
+    completed_date: toNullIfEmpty(body.completedDate),
+    attention_state: toNullIfEmpty(body.attentionState),
+    notes: toNullIfEmpty(body.notes),
   };
 }
