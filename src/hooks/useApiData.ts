@@ -22,7 +22,7 @@ export function useUpsertProject() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload: Partial<ProjectItem> & { id?: string }) => {
-      if (payload.id) return apiFetchJson<ProjectItem>(`/projects/${payload.id}`, { method: "PUT", body: JSON.stringify(payload) });
+      if (payload.id) return apiFetchJson<ProjectItem>(`/projects?id=${payload.id}`, { method: "PUT", body: JSON.stringify(payload) });
       return apiFetchJson<ProjectItem>("/projects", { method: "POST", body: JSON.stringify(payload) });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["projects"] }),
@@ -32,7 +32,7 @@ export function useUpsertProject() {
 export function useDeleteProject() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => apiFetchJson<void>(`/projects/${id}`, { method: "DELETE" }),
+    mutationFn: (id: string) => apiFetchJson<void>(`/projects?id=${id}`, { method: "DELETE" }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["projects"] }),
   });
 }
@@ -42,7 +42,7 @@ export function useUpsertAISubscription() {
   return useMutation({
     mutationFn: (payload: Partial<AISubscriptionItem> & { id?: string }) => {
       if (payload.id)
-        return apiFetchJson<AISubscriptionItem>(`/ai-subscriptions/${payload.id}`, { method: "PUT", body: JSON.stringify(payload) });
+        return apiFetchJson<AISubscriptionItem>(`/ai-subscriptions?id=${payload.id}`, { method: "PUT", body: JSON.stringify(payload) });
       return apiFetchJson<AISubscriptionItem>("/ai-subscriptions", { method: "POST", body: JSON.stringify(payload) });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["ai-subscriptions"] }),
@@ -52,7 +52,7 @@ export function useUpsertAISubscription() {
 export function useDeleteAISubscription() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => apiFetchJson<void>(`/ai-subscriptions/${id}`, { method: "DELETE" }),
+    mutationFn: (id: string) => apiFetchJson<void>(`/ai-subscriptions?id=${id}`, { method: "DELETE" }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["ai-subscriptions"] }),
   });
 }
