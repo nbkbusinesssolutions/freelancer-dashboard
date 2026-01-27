@@ -22,7 +22,7 @@ export default function AppShell() {
             {isMobile ? <MobileTopMenu /> : <SidebarTrigger className="min-h-11 min-w-11" />}
             <Separator orientation="vertical" className="h-6" />
             <div className="min-w-0">
-              <div className="truncate text-sm font-medium">NBK Business Dashboard</div>
+              <div className="truncate text-sm font-medium">NBK Control Center</div>
             </div>
             <div className="ml-auto flex items-center gap-2">
               <ExternalApiSettings />

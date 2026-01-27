@@ -32,10 +32,11 @@ export default function ExternalApiSettings() {
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={() => setOpen(true)} className="gap-2">
+      <Button variant="ghost" size="sm" onClick={() => setOpen(true)} className="gap-1.5 text-muted-foreground hover:text-foreground">
         <PlugZap className="h-4 w-4" />
-        <span className="hidden sm:inline">API</span>
-        <span className="text-muted-foreground">({effectiveMode})</span>
+        <span className="hidden sm:inline text-xs">
+          {effectiveMode === "Mock" ? "Local" : "Synced"}
+        </span>
       </Button>
 
       <ResponsiveModal

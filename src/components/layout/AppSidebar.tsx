@@ -36,9 +36,12 @@ export default function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <div className="px-2 py-2">
-          <div className="text-xs font-medium text-sidebar-foreground/70">Single-user ops</div>
-          <div className="text-sm font-semibold">Control Center</div>
+        <div className="px-2 py-2 flex items-center gap-2">
+          <img src="/logo-icon.png" alt="NBK" className="h-8 w-8 rounded" onError={(e) => { e.currentTarget.style.display = 'none' }} />
+          <div>
+            <div className="text-xs font-medium text-sidebar-foreground/70">NBK Business Solutions</div>
+            <div className="text-sm font-semibold">Control Center</div>
+          </div>
         </div>
       </SidebarHeader>
 
