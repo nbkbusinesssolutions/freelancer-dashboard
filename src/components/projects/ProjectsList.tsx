@@ -9,6 +9,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 function statusVariant(status: ProjectStatus) {
   if (status === "On Hold") return "secondary" as const;
@@ -135,9 +146,30 @@ export default function ProjectsList({
                   <Button variant="outline" className="min-h-11 flex-1" onClick={() => onEdit(p)}>
                     <Pencil className="mr-2 h-4 w-4" /> Edit
                   </Button>
-                  <Button variant="outline" className="min-h-11 flex-1" onClick={() => onDelete(p.id)}>
-                    <Trash2 className="mr-2 h-4 w-4" /> Delete
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" className="min-h-11 flex-1">
+                        <Trash2 className="mr-2 h-4 w-4" /> Delete
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Project</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete "{p.projectName}"? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => onDelete(p.id)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </CardContent>
             </Card>
@@ -228,10 +260,31 @@ export default function ProjectsList({
                     <Pencil className="h-4 w-4" />
                     <span className="sr-only">Edit</span>
                   </Button>
-                  <Button variant="outline" size="icon" onClick={() => onDelete(p.id)}>
-                    <Trash2 className="h-4 w-4" />
-                    <span className="sr-only">Delete</span>
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" size="icon">
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Delete</span>
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Project</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete "{p.projectName}"? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => onDelete(p.id)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </TableCell>
             </TableRow>

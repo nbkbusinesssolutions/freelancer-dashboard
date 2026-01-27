@@ -7,6 +7,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 type ItemWithStatus = AISubscriptionItem & { computedStatus: string };
 
@@ -47,9 +58,30 @@ export default function AISubscriptionsList({
                 </div>
 
                 <div className="mt-4">
-                  <Button variant="outline" className="w-full" onClick={() => onDelete(s.id)}>
-                    <Trash2 className="mr-2 h-4 w-4" /> Delete
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" className="w-full">
+                        <Trash2 className="mr-2 h-4 w-4" /> Delete
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Subscription</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete "{s.toolName}"? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => onDelete(s.id)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </CardContent>
             </Card>
@@ -86,10 +118,31 @@ export default function AISubscriptionsList({
               </TableCell>
               <TableCell>{s.cancelByDate || "—"}</TableCell>
               <TableCell className="text-right">
-                <Button variant="outline" size="icon" onClick={() => onDelete(s.id)}>
-                  <Trash2 className="h-4 w-4" />
-                  <span className="sr-only">Delete</span>
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" size="icon">
+                      <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">Delete</span>
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Subscription</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete "{s.toolName}"? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => onDelete(s.id)}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </TableCell>
             </TableRow>
           ))}
