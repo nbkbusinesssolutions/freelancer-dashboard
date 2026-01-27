@@ -413,7 +413,7 @@ export default function ProjectsPage() {
                     <FormItem>
                       <FormLabel>Domain Account Email</FormLabel>
                       <FormControl>
-                        <EmailCombobox label="domain email" items={vault} valueId={field.value} onChange={field.onChange} />
+                        <EmailCombobox label="domain email" valueId={field.value} onChange={field.onChange} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -426,7 +426,7 @@ export default function ProjectsPage() {
                     <FormItem>
                       <FormLabel>Deployment Email</FormLabel>
                       <FormControl>
-                        <EmailCombobox label="deployment email" items={vault} valueId={field.value} onChange={field.onChange} />
+                        <EmailCombobox label="deployment email" valueId={field.value} onChange={field.onChange} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
