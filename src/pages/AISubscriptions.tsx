@@ -230,16 +230,6 @@ export default function AISubscriptionsPage() {
         title={editing ? "Edit Subscription" : "Add Subscription"}
         description="Personal tools only. Optional password is temporary storage."
         contentClassName="max-w-2xl"
-        footer={
-          <>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" form="ai-sub-form" disabled={upsert.isPending}>
-              Save
-            </Button>
-          </>
-        }
       >
         <Form {...form}>
           <form id="ai-sub-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -417,6 +407,15 @@ export default function AISubscriptionsPage() {
                   </FormItem>
                 )}
               />
+
+              <div className="flex flex-col-reverse gap-2 pt-4 sm:flex-row sm:justify-end">
+                <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={upsert.isPending}>
+                  {upsert.isPending ? "Saving..." : "Save"}
+                </Button>
+              </div>
             </form>
         </Form>
       </ResponsiveModal>

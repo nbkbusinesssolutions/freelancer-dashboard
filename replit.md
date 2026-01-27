@@ -23,6 +23,12 @@ Internal control center for NBK Business Solutions to manage client projects, in
 
 ## Recent Changes (2026-01-27)
 
+### Form Submission Fixes:
+- **Fixed All Forms**: Moved submit buttons inside form elements for reliable submission
+- **Validation Feedback**: Added toast notifications when form validation fails
+- **Affected Pages**: Projects, Invoices, AI Subscriptions, Email Accounts
+- **Improved UX**: Clear description that email accounts must be added before creating projects
+
 ### Project Detail Page Redesign:
 - **Comprehensive Layout**: All project fields now displayed in organized card sections
 - **Clear Sections**: Basic Information, Domain Information, Hosting Information, Payment & Status

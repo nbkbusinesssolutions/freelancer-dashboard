@@ -175,6 +175,21 @@ export default function ProjectsPage() {
     return Number.isFinite(n) && n > 0 ? n : null;
   }
 
+  function onInvalid(errors: any) {
+    const errorMessages = Object.values(errors)
+      .map((err: any) => err?.message)
+      .filter(Boolean)
+      .slice(0, 3);
+    
+    if (errorMessages.length > 0) {
+      toast({ 
+        title: "Please fix the form errors", 
+        description: errorMessages.join(". "), 
+        variant: "destructive" 
+      });
+    }
+  }
+
   async function onSubmit(values: z.infer<typeof schema>) {
     try {
       const hostingStartDate = values.hostingSameAsDomain ? values.domainPurchaseDate : values.hostingStartDate;
@@ -289,21 +304,11 @@ export default function ProjectsPage() {
           }
         }}
         title={editing ? "Edit Project" : "Create Project"}
-        description="Everything references Account Vault first."
+        description="Add email accounts first in Email Accounts section before creating projects."
         contentClassName="max-w-2xl"
-        footer={
-          <>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" form="project-create-form" disabled={upsert.isPending}>
-              Save
-            </Button>
-          </>
-        }
       >
         <Form {...form}>
-          <form id="project-create-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form id="project-create-form" onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-4">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
@@ -683,6 +688,15 @@ export default function ProjectsPage() {
                   </FormItem>
                 )}
               />
+
+              <div className="flex flex-col-reverse gap-2 pt-4 sm:flex-row sm:justify-end">
+                <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={upsert.isPending}>
+                  {upsert.isPending ? "Saving..." : "Save"}
+                </Button>
+              </div>
             </form>
         </Form>
       </ResponsiveModal>

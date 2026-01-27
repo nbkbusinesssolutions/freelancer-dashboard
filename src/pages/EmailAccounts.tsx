@@ -484,16 +484,6 @@ export default function EmailAccountsPage() {
         title={editing ? "Edit Email Account" : "Add Email Account"}
         description="Store your email credentials securely in local storage."
         contentClassName="max-w-xl"
-        footer={
-          <>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="min-h-11">
-              Cancel
-            </Button>
-            <Button type="submit" form="email-form" className="min-h-11">
-              Save
-            </Button>
-          </>
-        }
       >
         <Form {...form}>
           <form id="email-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -659,6 +649,15 @@ export default function EmailAccountsPage() {
                 </FormItem>
               )}
             />
+
+            <div className="flex flex-col-reverse gap-2 pt-4 sm:flex-row sm:justify-end">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)} className="min-h-11">
+                Cancel
+              </Button>
+              <Button type="submit" className="min-h-11">
+                Save
+              </Button>
+            </div>
           </form>
         </Form>
       </ResponsiveModal>
@@ -670,16 +669,6 @@ export default function EmailAccountsPage() {
         title="Bulk Add Email Accounts"
         description="Paste multiple email addresses at once. One per line, or separated by commas."
         contentClassName="max-w-xl"
-        footer={
-          <>
-            <Button type="button" variant="outline" onClick={() => setBulkOpen(false)} className="min-h-11">
-              Cancel
-            </Button>
-            <Button type="submit" form="bulk-email-form" className="min-h-11">
-              Add Emails
-            </Button>
-          </>
-        }
       >
         <Form {...bulkForm}>
           <form id="bulk-email-form" onSubmit={bulkForm.handleSubmit(onBulkSubmit)} className="space-y-4">
@@ -784,6 +773,15 @@ export default function EmailAccountsPage() {
                 </FormItem>
               )}
             />
+
+            <div className="flex flex-col-reverse gap-2 pt-4 sm:flex-row sm:justify-end">
+              <Button type="button" variant="outline" onClick={() => setBulkOpen(false)} className="min-h-11">
+                Cancel
+              </Button>
+              <Button type="submit" className="min-h-11">
+                Add Emails
+              </Button>
+            </div>
           </form>
         </Form>
       </ResponsiveModal>

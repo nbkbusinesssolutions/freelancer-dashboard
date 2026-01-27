@@ -445,16 +445,6 @@ export default function InvoicesPage() {
         title={editing ? "Edit Invoice" : "Create Invoice"}
         description="Add invoice details and line items."
         contentClassName="max-w-3xl max-h-[90vh] overflow-y-auto"
-        footer={
-          <>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="min-h-11">
-              Cancel
-            </Button>
-            <Button type="submit" form="invoice-form" className="min-h-11">
-              {editing ? "Update" : "Create"} Invoice
-            </Button>
-          </>
-        }
       >
         <Form {...form}>
           <form id="invoice-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -758,6 +748,15 @@ export default function InvoicesPage() {
                 </FormItem>
               )}
             />
+
+            <div className="flex flex-col-reverse gap-2 pt-4 sm:flex-row sm:justify-end">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)} className="min-h-11">
+                Cancel
+              </Button>
+              <Button type="submit" className="min-h-11">
+                {editing ? "Update" : "Create"} Invoice
+              </Button>
+            </div>
           </form>
         </Form>
       </ResponsiveModal>
