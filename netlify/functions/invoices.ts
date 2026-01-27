@@ -42,7 +42,30 @@ export default async (request: Request, context: Context) => {
       case "POST": {
         const body = await request.json();
         const { lineItems, ...invoiceData } = body;
-        const dbBody = transformToDb(invoiceData);
+        
+        // If clientName is provided but no clientId, find or create the client
+        let clientId = invoiceData.clientId;
+        if (!clientId && invoiceData.clientName) {
+          const { data: existingClient } = await supabase
+            .from("clients")
+            .select("id")
+            .eq("name", invoiceData.clientName)
+            .single();
+          
+          if (existingClient) {
+            clientId = existingClient.id;
+          } else {
+            const { data: newClient, error: clientError } = await supabase
+              .from("clients")
+              .insert({ name: invoiceData.clientName })
+              .select()
+              .single();
+            if (clientError) return errorResponse(`Failed to create client: ${clientError.message}`, 400);
+            clientId = newClient.id;
+          }
+        }
+        
+        const dbBody = transformToDb({ ...invoiceData, clientId });
         
         const { data: invoice, error: invoiceError } = await supabase
           .from("invoices")

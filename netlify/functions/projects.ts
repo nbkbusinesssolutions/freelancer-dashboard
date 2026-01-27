@@ -41,7 +41,32 @@ export default async (request: Request, context: Context) => {
 
       case "POST": {
         const body = await request.json();
-        const dbBody = transformToDb(body);
+        
+        // If clientName is provided but no clientId, find or create the client
+        let clientId = body.clientId;
+        if (!clientId && body.clientName) {
+          // Try to find existing client by name
+          const { data: existingClient } = await supabase
+            .from("clients")
+            .select("id")
+            .eq("name", body.clientName)
+            .single();
+          
+          if (existingClient) {
+            clientId = existingClient.id;
+          } else {
+            // Create new client
+            const { data: newClient, error: clientError } = await supabase
+              .from("clients")
+              .insert({ name: body.clientName })
+              .select()
+              .single();
+            if (clientError) return errorResponse(`Failed to create client: ${clientError.message}`, 400);
+            clientId = newClient.id;
+          }
+        }
+        
+        const dbBody = transformToDb({ ...body, clientId });
         const { data, error } = await supabase
           .from("projects")
           .insert(dbBody)
