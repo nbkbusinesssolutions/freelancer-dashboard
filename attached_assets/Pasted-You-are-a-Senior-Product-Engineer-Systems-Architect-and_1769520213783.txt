@@ -1,0 +1,185 @@
+You are a Senior Product Engineer, Systems Architect, and UX Lead
+with 15+ years of experience building internal business dashboards,
+billing systems, and production-ready tools.
+
+You are working on an existing React + TypeScript project called:
+NBK Business Dashboard
+
+This app is CLOSE TO PRODUCTION and will be:
+- Pushed to GitHub
+- Deployed on Netlify
+- Used daily as an internal business control center
+
+Your job is to ANALYZE THE CURRENT CODEBASE FIRST
+and then APPLY CLEAN, PROFESSIONAL, NON-BREAKING REFACTORS.
+
+━━━━━━━━━━━━━━━━━━━━━━
+ABSOLUTE RULES (NON-NEGOTIABLE)
+━━━━━━━━━━━━━━━━━━━━━━
+- Analyze existing components, hooks, data models before changing anything
+- Reuse existing patterns and architecture
+- Do NOT rebuild the app
+- Do NOT introduce backend-only dependencies
+- Do NOT break Netlify static deployment
+- No experimental or unnecessary features
+- UI must be calm, professional, and business-grade
+- Every change must reduce friction and improve clarity
+
+━━━━━━━━━━━━━━━━━━━━━━
+PART 1 — MERGE ACCOUNT VAULT + EMAIL ACCOUNTS (CRITICAL)
+━━━━━━━━━━━━━━━━━━━━━━
+CURRENT STATE:
+- Account Vault exists (emails, platforms, username, notes)
+- A separate Email Accounts feature was added
+- Username field exists in Account Vault
+- Username also exists in Projects
+
+DECISION (LOCKED):
+- MERGE Account Vault and Email Accounts into ONE unified module
+- REMOVE username field from Account Vault entirely
+- Username should exist ONLY where contextually required (e.g., Projects)
+
+FINAL MODULE PURPOSE:
+A SINGLE SOURCE OF TRUTH for all email accounts used across the business.
+
+FINAL FIELDS (EMAIL ACCOUNT):
+- Email address (required)
+- Provider (Gmail, Outlook, Custom, etc.)
+- Password (masked, show/hide toggle)
+- Recovery email (optional)
+- Phone number (optional)
+- Notes
+- Status (Active / Not in use)
+- Tags or usage reference (optional: domain, hosting, admin, etc.)
+
+TASKS:
+- Merge both pages into ONE clean page
+- Update routes and navigation
+- Update references in Projects, AI Subscriptions, Billing
+- Remove username from Account Vault forms, types, and storage
+- Ensure backward compatibility for existing saved data
+
+━━━━━━━━━━━━━━━━━━━━━━
+PART 2 — BULK ADD EMAIL ACCOUNTS (MANDATORY)
+━━━━━━━━━━━━━━━━━━━━━━
+Add a BULK ADD feature for Email Accounts.
+
+REQUIREMENTS:
+- Modal or sheet-based UI
+- Paste multiple emails at once (one per line or CSV-style)
+- Validate emails before saving
+- Allow provider selection (optional default)
+- Skip duplicates gracefully
+- Show success / failure summary
+
+RULES:
+- No external libraries unless absolutely required
+- Clean UX, no clutter
+- Fast workflow (this is a power-user feature)
+
+━━━━━━━━━━━━━━━━━━━━━━
+PART 3 — BILLING → PROFESSIONAL INVOICING SYSTEM (HIGH PRIORITY)
+━━━━━━━━━━━━━━━━━━━━━━
+CURRENT STATE:
+- Billing exists
+- Services module exists (not required anymore)
+
+DECISION (LOCKED):
+- REMOVE Services module completely
+- Billing should become Billing & Invoices
+- Billing must be clean, structured, and client-shareable
+
+INVOICE REQUIREMENTS:
+Invoice must support:
+- Invoice number (auto-generated)
+- Invoice date
+- Due date
+- Client details
+- Project reference
+- Line items:
+  - Description
+  - Quantity
+  - Rate
+  - Line total
+- Subtotal
+- Tax (optional)
+- Discount (optional)
+- Grand total
+- Paid amount
+- Balance due
+- Payment status
+- Notes
+
+BUSINESS BRANDING:
+I will attach:
+- Business name
+- Logo
+- UPI QR / Scanner
+- UPI ID
+- Mobile number
+- Address (if available)
+
+TASKS:
+- Integrate business branding into invoice layout
+- Add payment section with:
+  - UPI QR
+  - UPI ID
+  - Mobile number
+- Invoice must look PROFESSIONAL and TRUSTWORTHY
+
+INVOICE FEATURES:
+- Invoice preview screen
+- Print-friendly layout
+- Share-ready (PDF-style layout, even if not exporting yet)
+- Consistent typography and spacing
+- Calm, business-grade design
+
+━━━━━━━━━━━━━━━━━━━━━━
+PART 4 — DATA MIGRATION & CLEANUP (IMPORTANT)
+━━━━━━━━━━━━━━━━━━━━━━
+- Migrate existing billing data cleanly
+- Remove services-related logic safely
+- Ensure no orphaned references
+- Update hooks and localStorage keys if required
+- Avoid data loss
+
+━━━━━━━━━━━━━━━━━━━━━━
+PART 5 — UI / UX POLISH (MANDATORY)
+━━━━━━━━━━━━━━━━━━━━━━
+Improve:
+- Forms spacing and readability
+- Input grouping
+- Labels and helper text
+- Card layouts
+- Section separation
+- Consistent button hierarchy
+
+Rules:
+- No flashy colors
+- No gradients unless subtle
+- Professional, agency-grade look
+- Mobile-first
+- Accessibility-friendly
+
+━━━━━━━━━━━━━━━━━━━━━━
+PART 6 — DEPLOYMENT SAFETY (CRITICAL)
+━━━━━━━━━━━━━━━━━━━━━━
+Before finishing, VERIFY:
+- No Netlify build blockers
+- No browser-only APIs misused
+- No hardcoded secrets
+- Routing works with Netlify (_redirects if required)
+- Static deployment compatibility
+
+━━━━━━━━━━━━━━━━━━━━━━
+FINAL OUTPUT EXPECTATION
+━━━━━━━━━━━━━━━━━━━━━━
+You must:
+- Clearly explain WHAT you will change
+- Explain WHY each change improves productivity
+- Apply changes incrementally
+- Keep the codebase clean and maintainable
+- Treat this as a final production refactor
+
+Think like a senior engineer finishing a real internal product
+that will be used daily for years.
