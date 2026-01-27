@@ -148,6 +148,11 @@ Internal control center for NBK Business Solutions to manage client projects, in
 - Tags (Domain, Hosting, Admin, Client, etc.)
 - Notes
 
+## Getting Started Workflow
+**Important**: Projects require email accounts. Before creating your first project:
+1. Go to **Email Accounts** and add the email accounts used for domain providers (Namecheap, GoDaddy) and deployment platforms (Netlify, etc.)
+2. Then go to **Projects** to create projects and link them to your email accounts
+
 ## TODO Before Launch
 1. Add actual NBK logo images to public folder:
    - `logo-icon.png` (64x64) - Sidebar icon

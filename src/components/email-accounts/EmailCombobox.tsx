@@ -57,6 +57,18 @@ export default function EmailCombobox({
     setQuery("");
   };
 
+  // If there are no email accounts at all, show a helpful message
+  if (items.length === 0) {
+    return (
+      <div className="flex min-h-11 items-center rounded-md border border-input bg-background px-3 py-2 text-sm text-muted-foreground">
+        <span>No email accounts yet. </span>
+        <a href="/email-accounts" className="ml-1 text-primary underline hover:no-underline">
+          Add one first
+        </a>
+      </div>
+    );
+  }
+
   const content = (
     <Command>
       <CommandInput
