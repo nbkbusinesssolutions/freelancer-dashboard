@@ -8,8 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { useProjects, useAccountVault, useAISubscriptions } from "@/hooks/useApiData";
-import { useBillingLog } from "@/hooks/useServicesData";
+import { useProjects, useAISubscriptions } from "@/hooks/useApiData";
+import { useEmailAccounts } from "@/hooks/useEmailAccounts";
+import { useInvoices } from "@/hooks/useInvoices";
 import { useActions } from "@/hooks/use-actions";
 import { useProjectLog } from "@/hooks/use-project-log";
 import ActionItemsSection from "@/components/actions/ActionItemsSection";
@@ -48,18 +49,16 @@ export default function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
 
   const projectsQ = useProjects();
-  const vaultQ = useAccountVault();
+  const { items: emailAccounts, isLoading: emailLoading } = useEmailAccounts();
   const aiSubsQ = useAISubscriptions();
-  const billingQ = useBillingLog();
+  const { items: invoices, isLoading: invoicesLoading } = useInvoices();
 
   const projects = projectsQ.data?.items ?? [];
-  const vault = vaultQ.data?.items ?? [];
   const aiSubs = aiSubsQ.data?.items ?? [];
-  const billing = billingQ.data?.items ?? [];
 
   const project = projects.find((p) => p.id === projectId);
 
-  const isLoading = projectsQ.isLoading || vaultQ.isLoading || aiSubsQ.isLoading || billingQ.isLoading;
+  const isLoading = projectsQ.isLoading || emailLoading || aiSubsQ.isLoading || invoicesLoading;
 
   if (isLoading) {
     return (
@@ -87,18 +86,18 @@ export default function ProjectDetailPage() {
     );
   }
 
-  const domainEmail = vault.find((v) => v.id === project.domainEmailId);
-  const deploymentEmail = vault.find((v) => v.id === project.deploymentEmailId);
+  const domainEmail = emailAccounts.find((v) => v.id === project.domainEmailId);
+  const deploymentEmail = emailAccounts.find((v) => v.id === project.deploymentEmailId);
 
   const linkedAiSubs = aiSubs.filter((s) => {
-    const email = vault.find((v) => v.id === s.emailId);
+    const email = emailAccounts.find((v) => v.id === s.emailId);
     return email && (email.id === project.domainEmailId || email.id === project.deploymentEmailId);
   });
 
-  const projectBilling = billing.filter(
-    (b) =>
-      b.clientName.toLowerCase() === project.clientName.toLowerCase() ||
-      (b.projectName && b.projectName.toLowerCase() === project.projectName.toLowerCase())
+  const projectInvoices = invoices.filter(
+    (inv) =>
+      inv.clientName.toLowerCase() === project.clientName.toLowerCase() ||
+      (inv.projectName && inv.projectName.toLowerCase() === project.projectName.toLowerCase())
   );
 
   const domainDays = getDaysLeft(project.domainRenewalDate);
@@ -322,32 +321,32 @@ export default function ProjectDetailPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Billing History</CardTitle>
-              <CardDescription>Recent billing for this client/project</CardDescription>
+              <CardTitle className="text-base">Invoice History</CardTitle>
+              <CardDescription>Recent invoices for this client/project</CardDescription>
             </CardHeader>
             <CardContent>
-              {projectBilling.length > 0 ? (
+              {projectInvoices.length > 0 ? (
                 <div className="space-y-2">
-                  {projectBilling.slice(0, 5).map((b) => (
-                    <div key={b.id} className="flex items-center justify-between rounded-md border p-2">
+                  {projectInvoices.slice(0, 5).map((inv) => (
+                    <div key={inv.id} className="flex items-center justify-between rounded-md border p-2">
                       <div>
-                        <div className="text-sm font-medium">{b.serviceName}</div>
-                        <div className="text-xs text-muted-foreground">{formatDate(b.serviceDate)}</div>
+                        <div className="text-sm font-medium">{inv.invoiceNumber}</div>
+                        <div className="text-xs text-muted-foreground">{formatDate(inv.invoiceDate)}</div>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-medium">{b.amount ? `$${b.amount}` : "-"}</div>
+                        <div className="text-sm font-medium">{inv.total ? `$${inv.total.toFixed(2)}` : "-"}</div>
                         <Badge
-                          variant={b.paymentStatus === "Paid" ? "default" : b.paymentStatus === "Overdue" ? "destructive" : "secondary"}
+                          variant={inv.paymentStatus === "Paid" ? "default" : inv.paymentStatus === "Overdue" ? "destructive" : "secondary"}
                           className="text-xs"
                         >
-                          {b.paymentStatus}
+                          {inv.paymentStatus}
                         </Badge>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-sm text-muted-foreground">No billing records found</div>
+                <div className="text-sm text-muted-foreground">No invoices found</div>
               )}
             </CardContent>
           </Card>

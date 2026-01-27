@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { useProjects } from "@/hooks/useApiData";
-import { useBillingLog } from "@/hooks/useServicesData";
+import { useInvoices } from "@/hooks/useInvoices";
 import { useActions } from "@/hooks/use-actions";
 import ActionItemsSection from "@/components/actions/ActionItemsSection";
 import { AttentionBadge } from "@/components/attention/AttentionStateSelector";
@@ -27,25 +27,24 @@ export default function ClientDetailPage() {
   const clientName = clientId ? decodeURIComponent(clientId) : "";
 
   const projectsQ = useProjects();
-  const billingQ = useBillingLog();
+  const { items: invoices, isLoading: invoicesLoading } = useInvoices();
 
   const projects = projectsQ.data?.items ?? [];
-  const billing = billingQ.data?.items ?? [];
 
-  const isLoading = projectsQ.isLoading || billingQ.isLoading;
+  const isLoading = projectsQ.isLoading || invoicesLoading;
 
   const clientProjects = projects.filter(
     (p) => p.clientName.toLowerCase() === clientName.toLowerCase()
   );
 
-  const clientBilling = billing.filter(
-    (b) => b.clientName.toLowerCase() === clientName.toLowerCase()
+  const clientInvoices = invoices.filter(
+    (inv) => inv.clientName.toLowerCase() === clientName.toLowerCase()
   );
 
-  const totalBilled = clientBilling.reduce((sum, b) => sum + (b.amount ?? 0), 0);
-  const totalPaid = clientBilling
-    .filter((b) => b.paymentStatus === "Paid")
-    .reduce((sum, b) => sum + (b.amount ?? 0), 0);
+  const totalBilled = clientInvoices.reduce((sum, inv) => sum + (inv.total ?? 0), 0);
+  const totalPaid = clientInvoices
+    .filter((inv) => inv.paymentStatus === "Paid")
+    .reduce((sum, inv) => sum + (inv.total ?? 0), 0);
 
   if (isLoading) {
     return (
@@ -168,38 +167,38 @@ export default function ClientDetailPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Recent Billing</CardTitle>
-              <CardDescription>Last 5 transactions</CardDescription>
+              <CardTitle className="text-base">Recent Invoices</CardTitle>
+              <CardDescription>Last 5 invoices</CardDescription>
             </CardHeader>
             <CardContent>
-              {clientBilling.length > 0 ? (
+              {clientInvoices.length > 0 ? (
                 <div className="space-y-2">
-                  {clientBilling.slice(0, 5).map((b) => (
-                    <div key={b.id} className="flex items-center justify-between rounded-md border p-2">
+                  {clientInvoices.slice(0, 5).map((inv) => (
+                    <div key={inv.id} className="flex items-center justify-between rounded-md border p-2">
                       <div>
-                        <div className="text-sm font-medium">{b.serviceName}</div>
-                        <div className="text-xs text-muted-foreground">{formatDate(b.serviceDate)}</div>
+                        <div className="text-sm font-medium">{inv.invoiceNumber}</div>
+                        <div className="text-xs text-muted-foreground">{formatDate(inv.invoiceDate)}</div>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-medium">{b.amount ? `$${b.amount}` : "-"}</div>
+                        <div className="text-sm font-medium">{inv.total ? `$${inv.total.toFixed(2)}` : "-"}</div>
                         <Badge
                           variant={
-                            b.paymentStatus === "Paid"
+                            inv.paymentStatus === "Paid"
                               ? "default"
-                              : b.paymentStatus === "Overdue"
+                              : inv.paymentStatus === "Overdue"
                               ? "destructive"
                               : "secondary"
                           }
                           className="text-xs"
                         >
-                          {b.paymentStatus}
+                          {inv.paymentStatus}
                         </Badge>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-sm text-muted-foreground">No billing records</div>
+                <div className="text-sm text-muted-foreground">No invoices</div>
               )}
             </CardContent>
           </Card>

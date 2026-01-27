@@ -6,7 +6,8 @@ import { useForm } from "react-hook-form";
 import { useSearchParams } from "react-router-dom";
 
 import { toast } from "@/hooks/use-toast";
-import { useAccountVault, useDeleteProject, useProjects, useUpsertProject } from "@/hooks/useApiData";
+import { useDeleteProject, useProjects, useUpsertProject } from "@/hooks/useApiData";
+import { useEmailAccounts } from "@/hooks/useEmailAccounts";
 import type { ProjectItem, ProjectStatus, ProjectPaymentStatus } from "@/lib/types";
 import { computeDateExpiry } from "@/lib/dateExpiry";
 
@@ -24,7 +25,7 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import EmailCombobox from "@/components/account-vault/EmailCombobox";
+import EmailCombobox from "@/components/email-accounts/EmailCombobox";
 
 import { CreatableCombobox } from "@/components/ui/creatable-combobox";
 import { ResponsiveModal } from "@/components/ui/responsive-modal";
@@ -78,7 +79,6 @@ export default function ProjectsPage() {
   const filterRenewal = (params.get("renewal") as "domain" | "hosting" | "overdue" | null) ?? null;
   const filterPayment = params.get("payment") ?? null;
 
-  const vaultQ = useAccountVault();
   const projectsQ = useProjects();
   const upsert = useUpsertProject();
   const del = useDeleteProject();
@@ -115,7 +115,6 @@ export default function ProjectsPage() {
     );
   });
 
-  const vault = vaultQ.data?.items ?? [];
 
   const hostingPlatforms = useMasterList("nbk.master.hostingPlatforms", ["Netlify"]);
   const domainProviders = useMasterList("nbk.master.domainProviders", ["Namecheap", "GoDaddy"]);

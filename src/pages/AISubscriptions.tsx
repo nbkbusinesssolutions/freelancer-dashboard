@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { useSearchParams } from "react-router-dom";
 
 import { toast } from "@/hooks/use-toast";
-import { useAccountVault, useAISubscriptions, useDeleteAISubscription, useUpsertAISubscription } from "@/hooks/useApiData";
+import { useAISubscriptions, useDeleteAISubscription, useUpsertAISubscription } from "@/hooks/useApiData";
 import type { Platform, SubscriptionType } from "@/lib/types";
 import { computeSubscriptionStatus } from "@/lib/subscriptionStatus";
 
@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import EmailCombobox from "@/components/account-vault/EmailCombobox";
+import EmailCombobox from "@/components/email-accounts/EmailCombobox";
 import { Switch } from "@/components/ui/switch";
 
 import { CreatableCombobox } from "@/components/ui/creatable-combobox";
@@ -74,11 +74,9 @@ export default function AISubscriptionsPage() {
   const filterStatus = params.get("status");
   const focusId = params.get("focus");
 
-  const vaultQ = useAccountVault();
   const q = useAISubscriptions();
   const upsert = useUpsertAISubscription();
   const del = useDeleteAISubscription();
-  const vault = vaultQ.data?.items ?? [];
 
   const platforms = useMasterList("nbk.master.platforms", CORE_PLATFORMS);
   const tools = useMasterList("nbk.master.aiTools", []);
@@ -300,7 +298,7 @@ export default function AISubscriptionsPage() {
                   <FormItem>
                     <FormLabel>Email ID Used</FormLabel>
                     <FormControl>
-                      <EmailCombobox label="email" items={vault} valueId={field.value} onChange={field.onChange} />
+                      <EmailCombobox label="email" valueId={field.value} onChange={field.onChange} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

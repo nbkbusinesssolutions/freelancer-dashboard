@@ -1,10 +1,25 @@
-import { Link2, Settings as SettingsIcon, Download, Upload, AlertTriangle } from "lucide-react";
+import { Link2, Settings as SettingsIcon, Download, Upload, AlertTriangle, Building2 } from "lucide-react";
 import * as React from "react";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 
 import ExternalApiSettingsPanel from "@/components/api/ExternalApiSettingsPanel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useBusinessBranding } from "@/hooks/useBusinessBranding";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from "@/components/ui/form";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,20 +35,32 @@ import {
 const STORAGE_KEYS = [
   "nbk.actions",
   "nbk.projectLogs",
-  "nbk.masterList.servicesCatalog",
-  "nbk.masterList.billingLog",
   "nbk.emailAccounts",
+  "nbk.invoices",
+  "nbk.businessBranding",
   "nbk.remindersShown",
+  "mockApiDb:v1",
   "externalApiBaseUrl",
   "externalApiKey",
   "externalApiKeyHeader",
   "useMockApi",
 ];
 
+const brandingSchema = z.object({
+  businessName: z.string().min(1, "Business name required").max(100),
+  tagline: z.string().max(200).optional(),
+  logoUrl: z.string().url().optional().or(z.literal("")),
+  upiQrUrl: z.string().url().optional().or(z.literal("")),
+  upiId: z.string().max(100).optional(),
+  mobile: z.string().max(20).optional(),
+  address: z.string().max(500).optional(),
+  email: z.string().email().optional().or(z.literal("")),
+});
+
 function exportAllData() {
   const exportData: Record<string, unknown> = {
     exportedAt: new Date().toISOString(),
-    version: "1.0",
+    version: "2.0",
     data: {},
   };
 
@@ -65,7 +92,35 @@ function downloadJson(data: unknown, filename: string) {
 
 export default function SettingsPage() {
   const { toast } = useToast();
+  const { branding, update: updateBranding } = useBusinessBranding();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const form = useForm<z.infer<typeof brandingSchema>>({
+    resolver: zodResolver(brandingSchema),
+    defaultValues: {
+      businessName: branding.businessName,
+      tagline: branding.tagline ?? "",
+      logoUrl: branding.logoUrl ?? "",
+      upiQrUrl: branding.upiQrUrl ?? "",
+      upiId: branding.upiId ?? "",
+      mobile: branding.mobile ?? "",
+      address: branding.address ?? "",
+      email: branding.email ?? "",
+    },
+  });
+
+  React.useEffect(() => {
+    form.reset({
+      businessName: branding.businessName,
+      tagline: branding.tagline ?? "",
+      logoUrl: branding.logoUrl ?? "",
+      upiQrUrl: branding.upiQrUrl ?? "",
+      upiId: branding.upiId ?? "",
+      mobile: branding.mobile ?? "",
+      address: branding.address ?? "",
+      email: branding.email ?? "",
+    });
+  }, [branding, form]);
 
   const handleExport = () => {
     const data = exportAllData();
@@ -118,6 +173,20 @@ export default function SettingsPage() {
     e.target.value = "";
   };
 
+  function onBrandingSubmit(values: z.infer<typeof brandingSchema>) {
+    updateBranding({
+      businessName: values.businessName,
+      tagline: values.tagline || null,
+      logoUrl: values.logoUrl || null,
+      upiQrUrl: values.upiQrUrl || null,
+      upiId: values.upiId || null,
+      mobile: values.mobile || null,
+      address: values.address || null,
+      email: values.email || null,
+    });
+    toast({ title: "Business branding updated" });
+  }
+
   return (
     <main className="space-y-6">
       <header>
@@ -125,6 +194,144 @@ export default function SettingsPage() {
         <p className="text-sm text-muted-foreground">Configure your NBK Control Center.</p>
       </header>
 
+      {/* Business Branding */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Building2 className="h-5 w-5" /> Business Branding
+          </CardTitle>
+          <CardDescription>Configure your business details for invoices and documents.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onBrandingSubmit)} className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="businessName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Business Name</FormLabel>
+                      <FormControl>
+                        <Input className="min-h-11" placeholder="Your Business Name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="tagline"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tagline (optional)</FormLabel>
+                      <FormControl>
+                        <Input className="min-h-11" placeholder="Professional Web Development" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Business Email (optional)</FormLabel>
+                      <FormControl>
+                        <Input type="email" className="min-h-11" placeholder="contact@business.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="mobile"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Mobile Number (optional)</FormLabel>
+                      <FormControl>
+                        <Input type="tel" className="min-h-11" placeholder="+91 98765 43210" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Business Address (optional)</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Your business address..." rows={2} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="logoUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Logo URL (optional)</FormLabel>
+                      <FormControl>
+                        <Input className="min-h-11" placeholder="https://example.com/logo.png" {...field} />
+                      </FormControl>
+                      <FormDescription>Direct URL to your logo image</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="upiQrUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>UPI QR Code URL (optional)</FormLabel>
+                      <FormControl>
+                        <Input className="min-h-11" placeholder="https://example.com/upi-qr.png" {...field} />
+                      </FormControl>
+                      <FormDescription>Direct URL to your UPI QR image</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="upiId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>UPI ID (optional)</FormLabel>
+                    <FormControl>
+                      <Input className="min-h-11" placeholder="yourname@upi" {...field} />
+                    </FormControl>
+                    <FormDescription>Your UPI payment ID for invoices</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button type="submit" className="min-h-11">
+                Save Branding
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+
+      {/* Data Backup */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -175,11 +382,12 @@ export default function SettingsPage() {
             />
           </div>
           <p className="text-xs text-muted-foreground">
-            Includes: Action items, project logs, billing records, email accounts, and settings.
+            Includes: Projects, invoices, email accounts, action items, and business branding.
           </p>
         </CardContent>
       </Card>
 
+      {/* External API */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -192,6 +400,7 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
+      {/* Notes */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -204,6 +413,7 @@ export default function SettingsPage() {
             <li>This app stores data locally in your browser by default.</li>
             <li>Export your data regularly to prevent data loss.</li>
             <li>Configure an external API for cloud sync if needed.</li>
+            <li>Business branding appears on all generated invoices.</li>
           </ul>
         </CardContent>
       </Card>

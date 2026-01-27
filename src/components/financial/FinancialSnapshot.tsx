@@ -3,14 +3,13 @@ import { startOfMonth, endOfMonth, addDays, parseISO, isWithinInterval } from "d
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { useBillingLog } from "@/hooks/useServicesData";
+import { useInvoices } from "@/hooks/useInvoices";
 import { useAISubscriptions } from "@/hooks/useApiData";
 
 export default function FinancialSnapshot() {
-  const billingQ = useBillingLog();
+  const { items: invoices } = useInvoices();
   const aiSubsQ = useAISubscriptions();
 
-  const billing = billingQ.data?.items ?? [];
   const aiSubs = aiSubsQ.data?.items ?? [];
 
   const now = new Date();
@@ -18,17 +17,17 @@ export default function FinancialSnapshot() {
   const monthEnd = endOfMonth(now);
   const next30Days = addDays(now, 30);
 
-  const revenueThisMonth = billing
-    .filter((b) => {
-      if (!b.serviceDate || b.paymentStatus !== "Paid") return false;
+  const revenueThisMonth = invoices
+    .filter((inv) => {
+      if (inv.paymentStatus !== "Paid") return false;
       try {
-        const date = parseISO(b.serviceDate);
+        const date = parseISO(inv.invoiceDate);
         return isWithinInterval(date, { start: monthStart, end: monthEnd });
       } catch {
         return false;
       }
     })
-    .reduce((sum, b) => sum + (b.amount ?? 0), 0);
+    .reduce((sum, inv) => sum + (inv.paidAmount ?? 0), 0);
 
   const upcomingCosts = aiSubs
     .filter((s) => {
@@ -56,7 +55,7 @@ export default function FinancialSnapshot() {
               Revenue (This Month)
             </div>
             <div className="text-2xl font-semibold text-green-600">
-              ${revenueThisMonth.toLocaleString()}
+              ₹{revenueThisMonth.toLocaleString()}
             </div>
           </div>
           <div className="space-y-1">

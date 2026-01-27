@@ -35,14 +35,19 @@ export type ProjectLogEntry = {
   createdAt: string;
 };
 
-export type AccountVaultItem = {
+export type EmailAccountStatus = "Active" | "Not in use";
+export type EmailProvider = "Gmail" | "Outlook" | "Yahoo" | "Zoho" | "Custom";
+
+export type EmailAccountItem = {
   id: string;
   email: string;
-  platform: Platform;
-  platformOther?: string | null;
-  username?: string | null;
+  provider: EmailProvider;
+  password?: string | null;
+  recoveryEmail?: string | null;
+  phone?: string | null;
   notes?: string | null;
-  isActive: boolean;
+  status: EmailAccountStatus;
+  tags?: string[] | null;
 };
 
 export type ProjectItem = {
@@ -52,20 +57,20 @@ export type ProjectItem = {
   domainName: string;
   domainProvider: "Namecheap" | "GoDaddy" | "Other";
   domainProviderOther?: string | null;
-  domainEmailId: string; // FK to AccountVaultItem
-  domainUsername?: string | null; // username for domain account
-  hostingPlatform: string; // default Netlify
-  deploymentEmailId: string; // FK to AccountVaultItem
-  deploymentUsername?: string | null; // username for deployment account
-  domainPurchaseDate?: string | null; // ISO date
-  domainRenewalDate?: string | null; // ISO date
-  hostingStartDate?: string | null; // ISO date
-  hostingRenewalDate?: string | null; // ISO date
+  domainEmailId: string;
+  domainUsername?: string | null;
+  hostingPlatform: string;
+  deploymentEmailId: string;
+  deploymentUsername?: string | null;
+  domainPurchaseDate?: string | null;
+  domainRenewalDate?: string | null;
+  hostingStartDate?: string | null;
+  hostingRenewalDate?: string | null;
   status: ProjectStatus;
   notes?: string | null;
   projectAmount?: number | null;
   paymentStatus?: ProjectPaymentStatus | null;
-  completedDate?: string | null; // ISO date
+  completedDate?: string | null;
   pendingAmount?: number | null;
   attentionState?: AttentionState | null;
 };
@@ -78,7 +83,7 @@ export type AISubscriptionItem = {
   toolName: string;
   platform: Platform;
   platformOther?: string | null;
-  emailId: string; // FK to AccountVaultItem
+  emailId: string;
   password?: string | null;
   subscriptionType: SubscriptionType;
   startDate?: string | null;
@@ -90,15 +95,36 @@ export type AISubscriptionItem = {
 };
 
 export type ServiceCadence = "One-time" | "Monthly" | "Yearly";
-export type PaymentStatus = "Unpaid" | "Paid" | "Overdue";
+export type PaymentStatus = "Unpaid" | "Paid" | "Partial" | "Overdue";
 
-export type ServiceCatalogItem = {
+export type InvoiceLineItem = {
   id: string;
-  serviceName: string;
-  cadence: ServiceCadence;
-  defaultAmount?: number | null;
+  description: string;
+  quantity: number;
+  rate: number;
+  total: number;
+};
+
+export type InvoiceItem = {
+  id: string;
+  invoiceNumber: string;
+  invoiceDate: string;
+  dueDate?: string | null;
+  clientName: string;
+  clientEmail?: string | null;
+  clientAddress?: string | null;
+  projectName?: string | null;
+  lineItems: InvoiceLineItem[];
+  subtotal: number;
+  taxRate?: number | null;
+  taxAmount?: number | null;
+  discountAmount?: number | null;
+  grandTotal: number;
+  paidAmount: number;
+  balanceDue: number;
+  paymentStatus: PaymentStatus;
   notes?: string | null;
-  isActive: boolean;
+  createdAt: string;
 };
 
 export type BillingLogItem = {
@@ -110,20 +136,17 @@ export type BillingLogItem = {
   amount?: number | null;
   paymentStatus: PaymentStatus;
   paymentMode?: string | null;
-  serviceDate?: string | null; // ISO date
+  serviceDate?: string | null;
   notes?: string | null;
 };
 
-export type EmailAccountStatus = "Active" | "Not in use";
-export type EmailProvider = "Gmail" | "Outlook" | "Custom";
-
-export type EmailAccountItem = {
-  id: string;
-  email: string;
-  provider: EmailProvider;
-  password?: string | null;
-  recoveryEmail?: string | null;
-  phone?: string | null;
-  notes?: string | null;
-  status: EmailAccountStatus;
+export type BusinessBranding = {
+  businessName: string;
+  tagline?: string | null;
+  logoUrl?: string | null;
+  upiQrUrl?: string | null;
+  upiId?: string | null;
+  mobile?: string | null;
+  address?: string | null;
+  email?: string | null;
 };

@@ -49,8 +49,8 @@ export default function ExternalApiSettings() {
         }
         description={
           <DialogDescription>
-            Configure external API settings. The API must implement the endpoints the UI calls (e.g. <code>/account-vault</code>, <code>/projects</code>,
-            <code> /ai-subscriptions</code>) behind the base URL.
+            Configure external API settings. The API must implement the endpoints the UI calls (e.g. <code>/email-accounts</code>, <code>/projects</code>,
+            <code> /invoices</code>, <code>/ai-subscriptions</code>) behind the base URL.
           </DialogDescription>
         }
         contentClassName="max-w-xl"

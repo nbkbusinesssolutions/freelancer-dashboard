@@ -55,7 +55,7 @@ export default function ExternalApiSettingsPanel({
           autoComplete="off"
         />
         <div className="text-xs text-muted-foreground">
-          Example: <code>https://example.com/api</code> so the UI request <code>/account-vault</code> becomes <code>.../api/account-vault</code>.
+          Example: <code>https://example.com/api</code> so the UI request <code>/email-accounts</code> becomes <code>.../api/email-accounts</code>.
         </div>
       </div>
 

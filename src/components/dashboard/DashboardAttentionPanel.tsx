@@ -203,14 +203,14 @@ export default function DashboardAttentionPanel({
             </Link>
           </Button>
           <Button asChild variant="outline" className="min-h-11 w-full justify-between">
-            <Link to="/services">
-              <span>Services & Billing</span>
+            <Link to="/invoices">
+              <span>Invoices & Billing</span>
               <span aria-hidden>→</span>
             </Link>
           </Button>
           <Button asChild variant="outline" className="min-h-11 w-full justify-between">
-            <Link to="/account-vault">
-              <span>Add Email / Credential</span>
+            <Link to="/email-accounts">
+              <span>Add Email Account</span>
               <span aria-hidden>→</span>
             </Link>
           </Button>

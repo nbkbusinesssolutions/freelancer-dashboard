@@ -1,9 +1,8 @@
-import type { AccountVaultItem, AISubscriptionItem, ProjectItem } from "@/lib/types";
+import type { AISubscriptionItem, ProjectItem } from "@/lib/types";
 
 type ListResponse<T> = { items: T[] };
 
 type Db = {
-  accountVault: AccountVaultItem[];
   projects: ProjectItem[];
   aiSubscriptions: AISubscriptionItem[];
 };
@@ -16,20 +15,33 @@ function newId(prefix: string) {
 
 function readDb(): Db {
   if (typeof window === "undefined") {
-    return { accountVault: [], projects: [], aiSubscriptions: [] };
+    return { projects: [], aiSubscriptions: [] };
   }
   const raw = window.localStorage.getItem(STORAGE_KEY);
-  if (!raw) return { accountVault: [], projects: [], aiSubscriptions: [] };
+  if (!raw) return { projects: [], aiSubscriptions: [] };
   try {
-    return JSON.parse(raw) as Db;
+    const parsed = JSON.parse(raw) as any;
+    return {
+      projects: parsed.projects || [],
+      aiSubscriptions: parsed.aiSubscriptions || [],
+    };
   } catch {
-    return { accountVault: [], projects: [], aiSubscriptions: [] };
+    return { projects: [], aiSubscriptions: [] };
   }
 }
 
 function writeDb(db: Db) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+  const existing = window.localStorage.getItem(STORAGE_KEY);
+  let merged: any = {};
+  if (existing) {
+    try {
+      merged = JSON.parse(existing);
+    } catch {}
+  }
+  merged.projects = db.projects;
+  merged.aiSubscriptions = db.aiSubscriptions;
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
 }
 
 function jsonBody(init?: RequestInit) {
@@ -41,7 +53,6 @@ function jsonBody(init?: RequestInit) {
       return undefined;
     }
   }
-  // We only support JSON string bodies for this mock.
   return undefined;
 }
 
@@ -61,48 +72,6 @@ export async function mockApiFetchJson<T>(path: string, init?: RequestInit): Pro
 
   const db = readDb();
 
-  // ACCOUNT VAULT
-  if (parts[0] === "account-vault") {
-    if (parts.length === 1 && method === "GET") {
-      return { items: db.accountVault } as ListResponse<AccountVaultItem> as T;
-    }
-    if (parts.length === 1 && method === "POST") {
-      const created: AccountVaultItem = {
-        id: newId("av"),
-        email: String(body?.email || "").trim(),
-        platform: body?.platform,
-        platformOther: body?.platformOther ?? null,
-        username: body?.username ?? null,
-        notes: body?.notes ?? null,
-        isActive: Boolean(body?.isActive ?? true),
-      };
-      db.accountVault.unshift(created);
-      writeDb(db);
-      return created as T;
-    }
-    if (parts.length === 2 && method === "PUT") {
-      const id = parts[1];
-      const idx = db.accountVault.findIndex((x) => x.id === id);
-      if (idx < 0) throw new Error("Not found");
-      const updated: AccountVaultItem = { ...db.accountVault[idx], ...body, id };
-      db.accountVault[idx] = updated;
-      writeDb(db);
-      return updated as T;
-    }
-    if (parts.length === 2 && method === "DELETE") {
-      const id = parts[1];
-      // prevent deleting when referenced (matches UI toast expectation)
-      const usedByProjects = db.projects.some((p) => p.domainEmailId === id || p.deploymentEmailId === id);
-      const usedBySubs = db.aiSubscriptions.some((s) => s.emailId === id);
-      if (usedByProjects || usedBySubs) {
-        throw new Error("Cannot delete: this email is referenced elsewhere.");
-      }
-      db.accountVault = db.accountVault.filter((x) => x.id !== id);
-      writeDb(db);
-      return undefined as T;
-    }
-  }
-
   // PROJECTS
   if (parts[0] === "projects") {
     if (parts.length === 1 && method === "GET") {
@@ -117,16 +86,21 @@ export async function mockApiFetchJson<T>(path: string, init?: RequestInit): Pro
         domainProvider: body?.domainProvider,
         domainProviderOther: body?.domainProviderOther ?? null,
         domainEmailId: body?.domainEmailId,
-        domainUsernameOverride: body?.domainUsernameOverride ?? null,
+        domainUsername: body?.domainUsername ?? null,
         hostingPlatform: body?.hostingPlatform ?? "Netlify",
         deploymentEmailId: body?.deploymentEmailId,
-        deploymentUsernameOverride: body?.deploymentUsernameOverride ?? null,
+        deploymentUsername: body?.deploymentUsername ?? null,
         domainPurchaseDate: body?.domainPurchaseDate ?? null,
         domainRenewalDate: body?.domainRenewalDate ?? null,
         hostingStartDate: body?.hostingStartDate ?? null,
         hostingRenewalDate: body?.hostingRenewalDate ?? null,
         status: body?.status,
         notes: body?.notes ?? null,
+        projectAmount: body?.projectAmount ?? null,
+        paymentStatus: body?.paymentStatus ?? null,
+        completedDate: body?.completedDate ?? null,
+        pendingAmount: body?.pendingAmount ?? null,
+        attentionState: body?.attentionState ?? null,
       };
       db.projects.unshift(created);
       writeDb(db);
@@ -168,6 +142,7 @@ export async function mockApiFetchJson<T>(path: string, init?: RequestInit): Pro
         cancelByDate: body?.cancelByDate ?? null,
         manualStatus: body?.manualStatus ?? null,
         notes: body?.notes ?? null,
+        attentionState: body?.attentionState ?? null,
       };
       db.aiSubscriptions.unshift(created);
       writeDb(db);

@@ -1,16 +1,17 @@
 # NBK Control Center
 
 ## Overview
-Internal control center for NBK Business Solutions to manage client projects, billing, email accounts, and AI subscriptions. Built with React, TypeScript, and Tailwind CSS.
+Internal control center for NBK Business Solutions to manage client projects, invoices, email accounts, and AI subscriptions. Built with React, TypeScript, and Tailwind CSS.
 
 ## Current State (Production Ready)
 - Full-stack application with Vite frontend
 - LocalStorage for data persistence with export/import backup
 - Dashboard with KPI cards, attention panels, financial snapshot, and action items
 - Projects management with payment tracking and countdown alerts
+- Professional Invoicing with line items, tax, discounts, and branded preview
 - AI Subscriptions management with expiry tracking
-- Email Accounts management for storing email credentials securely
-- Account Vault for credential management
+- Unified Email Accounts module with tags and bulk add
+- Business Branding configuration (logo, UPI QR, contact details)
 - Client dossier pages for quick client overview
 - Search functionality on all major pages
 
@@ -21,25 +22,30 @@ Internal control center for NBK Business Solutions to manage client projects, bi
 - Publish directory: `dist`
 
 ## Recent Changes (2026-01-27)
-### Project Form Improvements:
-- **Username Fields**: Added domain username and deployment username fields to project form
-- **Same as Domain Checkbox**: Auto-copy domain dates to hosting dates when checked
-- **Project Status**: Updated options to "Ongoing", "Completed", "On Hold"
-- **Edit Functionality**: Projects are now fully editable after creation with Edit button
-- **ProjectDetail View**: Shows usernames in the Project Overview section
+
+### Module Consolidation:
+- **Unified Email Accounts**: Merged Account Vault and Email Accounts into a single module
+- **Email Tags**: Added tags field for categorization (Domain, Hosting, Admin, etc.)
+- **Bulk Add Feature**: Paste multiple emails at once with CSV/text support
+
+### Professional Invoicing:
+- **Invoice System**: Replaced basic Billing with full invoicing (line items, tax, discounts)
+- **Invoice Preview**: Print-ready layout with business branding
+- **UPI Payment**: QR code integration for payment collection
+- **Business Branding**: Configure logo, company details, UPI ID in Settings
+
+### Removed Modules:
+- **Services Catalog**: Removed entirely (simplified workflow)
+- **Account Vault**: Merged into Email Accounts
+
+### Route Updates:
+- `/services` → `/invoices` (new invoicing system)
+- `/account-vault` removed (use `/email-accounts`)
 
 ### Previous Features:
-- **Search Everywhere**: Added search to Projects, AI Subscriptions, Billing, and Email Accounts pages
-- **Email Accounts Module**: New dedicated page for managing email credentials with password masking
-- **Simplified Billing**: Removed Service Catalog, focused on billing records only
-- **Reusable SearchInput**: Created `SearchInput` component for consistent search UI
-
-### Production Readiness:
-- Added Netlify routing config (netlify.toml + _redirects)
-- Added data export/import in Settings for backup
-- Updated branding to "NBK Control Center"
-- Applied NBK brand color palette (navy + gold)
-- Cleaned up API indicator (shows "Local" or "Synced")
+- **Username Fields**: Domain username and deployment username in projects
+- **Same as Domain Checkbox**: Auto-copy domain dates to hosting dates
+- **Edit Functionality**: Projects fully editable after creation
 
 ## Architecture
 
@@ -58,20 +64,24 @@ Internal control center for NBK Business Solutions to manage client projects, bi
 ### Local Storage Keys
 - `nbk.actions` - Action items
 - `nbk.projectLogs` - Project log entries
-- `nbk.masterList.billingLog` - Billing records
 - `nbk.emailAccounts` - Email account credentials
+- `nbk.invoices` - Invoice records
+- `nbk.businessBranding` - Company branding config
 
 ## Key Files
 - `src/pages/Dashboard.tsx` - Main dashboard
 - `src/pages/Projects.tsx` - Projects list with create/edit modal
 - `src/pages/ProjectDetail.tsx` - Unified project view
 - `src/pages/ClientDetail.tsx` - Client dossier
-- `src/pages/Billing.tsx` - Billing records
-- `src/pages/EmailAccounts.tsx` - Email credentials management
-- `src/pages/Settings.tsx` - Data backup & API config
-- `src/components/ui/search-input.tsx` - Reusable search component
-- `src/components/projects/ProjectsList.tsx` - Projects table/cards with edit/delete
-- `src/lib/types.ts` - Type definitions including ProjectItem
+- `src/pages/Invoices.tsx` - Invoice management
+- `src/pages/EmailAccounts.tsx` - Unified email credentials management
+- `src/pages/Settings.tsx` - Data backup, API config, Business Branding
+- `src/hooks/useInvoices.ts` - Invoice data hook
+- `src/hooks/useEmailAccounts.ts` - Email accounts hook
+- `src/hooks/useBusinessBranding.ts` - Business branding hook
+- `src/components/invoices/InvoicePreview.tsx` - Print-ready invoice view
+- `src/components/email-accounts/EmailCombobox.tsx` - Email selector component
+- `src/lib/types.ts` - Type definitions
 - `src/index.css` - NBK brand color palette
 
 ## Routes
@@ -79,10 +89,9 @@ Internal control center for NBK Business Solutions to manage client projects, bi
 - `/projects` - Projects list
 - `/projects/:projectId` - Project detail
 - `/clients/:clientId` - Client dossier
-- `/services` - Billing records
+- `/invoices` - Invoice management
 - `/ai-subscriptions` - AI Subscriptions
 - `/email-accounts` - Email Accounts
-- `/account-vault` - Account Vault
 - `/settings` - Settings & Backup
 
 ## Brand Colors
@@ -101,6 +110,24 @@ Internal control center for NBK Business Solutions to manage client projects, bi
 - Project Status: Ongoing, Completed, On Hold
 - Project Amount, Payment Status, Pending Amount
 - Completed Date, Notes
+
+## Invoice Fields
+- Invoice Number (auto-generated)
+- Client Name, Project Name
+- Invoice Date, Due Date
+- Line Items (description, quantity, rate, amount)
+- Tax Rate, Discount
+- Subtotal, Total
+- Payment Status (Pending, Partial, Paid, Overdue)
+- Paid Amount, Notes
+
+## Email Account Fields
+- Email address
+- Password (masked)
+- Provider (Gmail, Namecheap, GoDaddy, etc.)
+- Status (Active, Not in use)
+- Tags (Domain, Hosting, Admin, Client, etc.)
+- Notes
 
 ## TODO Before Launch
 1. Add actual NBK logo images to public folder:

@@ -1,15 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetchJson } from "@/lib/api";
-import type { AccountVaultItem, AISubscriptionItem, ProjectItem } from "@/lib/types";
+import type { AISubscriptionItem, ProjectItem } from "@/lib/types";
 
 type ListResponse<T> = { items: T[] };
-
-export function useAccountVault() {
-  return useQuery({
-    queryKey: ["account-vault"],
-    queryFn: () => apiFetchJson<ListResponse<AccountVaultItem>>("/account-vault"),
-  });
-}
 
 export function useProjects() {
   return useQuery({
@@ -22,25 +15,6 @@ export function useAISubscriptions() {
   return useQuery({
     queryKey: ["ai-subscriptions"],
     queryFn: () => apiFetchJson<ListResponse<AISubscriptionItem>>("/ai-subscriptions"),
-  });
-}
-
-export function useUpsertAccountVault() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (payload: Partial<AccountVaultItem> & { id?: string }) => {
-      if (payload.id) return apiFetchJson<AccountVaultItem>(`/account-vault/${payload.id}`, { method: "PUT", body: JSON.stringify(payload) });
-      return apiFetchJson<AccountVaultItem>("/account-vault", { method: "POST", body: JSON.stringify(payload) });
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["account-vault"] }),
-  });
-}
-
-export function useDeleteAccountVault() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => apiFetchJson<void>(`/account-vault/${id}`, { method: "DELETE" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["account-vault"] }),
   });
 }
 
