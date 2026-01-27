@@ -1,0 +1,208 @@
+🔒 STEP 1 — FREEZE FEATURES (VERY IMPORTANT)
+
+DO THIS FIRST.
+
+❌ Do NOT add:
+
+New tables
+
+New fields
+
+New UI features
+
+New dashboards
+
+✅ Only allow:
+
+Bug fixes
+
+Validation
+
+Testing
+
+Hardening
+
+Why:
+
+Every production failure comes from “one small extra thing” added too early.
+
+🧪 STEP 2 — VERIFY DATABASE IN SUPABASE (30 minutes)
+
+Go to Supabase Dashboard → Table Editor
+
+For EACH table, confirm:
+
+Checklist
+
+ Primary key exists (id uuid)
+
+ Foreign keys are correct
+
+ created_at default = now()
+
+ RLS enabled
+
+ No public policies
+
+ Indexes exist for FK columns
+
+Then run manual sanity inserts:
+
+INSERT INTO clients (name) VALUES ('Test Client');
+
+SELECT * FROM clients;
+
+
+If this works → DB is healthy.
+
+🔐 STEP 3 — VERIFY SECURITY (NON-NEGOTIABLE)
+In Supabase → API Settings
+
+Confirm:
+
+❌ anon key NOT used anywhere
+
+❌ public access disabled
+
+✅ service role key only
+
+In Netlify → Environment Variables
+
+Confirm:
+
+SUPABASE_URL
+SUPABASE_SERVICE_ROLE_KEY
+
+
+🚫 These must never appear in frontend code or Vite env.
+
+⚙️ STEP 4 — TEST NETLIFY FUNCTIONS LOCALLY
+
+Run locally (Netlify CLI or Vite proxy):
+
+Test endpoints one by one
+GET /.netlify/functions/clients
+POST /.netlify/functions/clients
+
+
+Test:
+
+Empty DB
+
+Invalid payload
+
+Missing required fields
+
+Delete with invalid ID
+
+Expected:
+
+Clean JSON errors
+
+No stack traces
+
+No crashes
+
+If one function fails → fix it now, not later.
+
+🔁 STEP 5 — FRONTEND END-TO-END TEST (API MODE)
+Force API mode
+
+Temporarily disable localStorage fallback.
+
+Test flows:
+
+✔ Create client
+✔ Create project linked to client
+✔ Add email account
+✔ Link email to project
+✔ Create invoice → items
+✔ Create AI subscription
+✔ Delete something (confirm cascade rules)
+
+If any UI breaks, fix mapping — not schema.
+
+🧬 STEP 6 — RUN MIGRATION (OPTIONAL BUT IMPORTANT)
+
+Only do this after everything above passes.
+
+Safe migration flow
+
+Open existing app (with data)
+
+Run:
+
+exportData()
+
+
+Save JSON
+
+Run:
+
+node scripts/migrate-to-supabase.js data.json
+
+After migration
+
+Compare counts:
+
+clients
+
+projects
+
+invoices
+
+Spot check:
+
+One client
+
+One project
+
+One invoice with items
+
+🚨 Do NOT delete localStorage yet.
+
+🚀 STEP 7 — DEPLOY TO NETLIFY (PRODUCTION)
+
+Now do the actual deployment.
+
+Netlify settings
+
+Build command: npm run build
+
+Publish directory: dist
+
+Functions directory: netlify/functions
+
+After deploy
+
+Test:
+
+Fresh browser
+
+Incognito
+
+Mobile
+
+If data loads → backend is live.
+
+🧹 STEP 8 — POST-DEPLOY CLEANUP (IMPORTANT)
+
+Only after 1–2 days of stable use:
+
+ Remove console logs
+
+ Disable migration script
+
+ Keep localStorage fallback (read-only)
+
+ Add JSON export backup button (manual safety)
+
+🛡️ STEP 9 — BACKUP & DISASTER SAFETY
+
+Set a monthly habit (manual is enough):
+
+Supabase → Download SQL backup
+
+Frontend → Export JSON
+
+That’s it. No automation needed.
