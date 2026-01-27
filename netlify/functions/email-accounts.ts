@@ -19,38 +19,40 @@ export default async (request: Request, context: Context) => {
             .eq("id", id)
             .single();
           if (error) return errorResponse(error.message, 404);
-          return jsonResponse(data);
+          return jsonResponse(transformEmailAccount(data));
         }
         const { data, error } = await supabase
           .from("email_accounts")
           .select("*")
           .order("created_at", { ascending: false });
         if (error) return errorResponse(error.message);
-        return jsonResponse({ items: data });
+        return jsonResponse({ items: data.map(transformEmailAccount) });
       }
 
       case "POST": {
         const body = await request.json();
+        const dbBody = transformToDb(body);
         const { data, error } = await supabase
           .from("email_accounts")
-          .insert(body)
+          .insert(dbBody)
           .select()
           .single();
         if (error) return errorResponse(error.message, 400);
-        return jsonResponse(data, 201);
+        return jsonResponse(transformEmailAccount(data), 201);
       }
 
       case "PUT": {
         if (!id) return errorResponse("Missing id parameter", 400);
         const body = await request.json();
+        const dbBody = transformToDb(body);
         const { data, error } = await supabase
           .from("email_accounts")
-          .update(body)
+          .update(dbBody)
           .eq("id", id)
           .select()
           .single();
         if (error) return errorResponse(error.message, 400);
-        return jsonResponse(data);
+        return jsonResponse(transformEmailAccount(data));
       }
 
       case "DELETE": {
@@ -70,3 +72,27 @@ export default async (request: Request, context: Context) => {
     return errorResponse(err instanceof Error ? err.message : "Unknown error");
   }
 };
+
+function transformEmailAccount(row: any) {
+  return {
+    id: row.id,
+    email: row.email,
+    password: row.password,
+    provider: row.provider,
+    status: row.status,
+    tags: row.tags,
+    notes: row.notes,
+    createdAt: row.created_at,
+  };
+}
+
+function transformToDb(body: any) {
+  return {
+    email: body.email,
+    password: body.password,
+    provider: body.provider,
+    status: body.status,
+    tags: body.tags,
+    notes: body.notes,
+  };
+}

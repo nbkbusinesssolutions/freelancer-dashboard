@@ -131,6 +131,7 @@ async function migrate(data: LocalStorageData) {
   if (data.invoices?.length) {
     console.log(`\nMigrating ${data.invoices.length} invoices...`);
     for (const invoice of data.invoices) {
+      const projectId = invoice.projectId ? projectMap[invoice.projectId] : null;
       const { data: created, error: invError } = await supabase
         .from("invoices")
         .insert({
@@ -138,6 +139,7 @@ async function migrate(data: LocalStorageData) {
           invoice_date: invoice.invoiceDate,
           due_date: invoice.dueDate || null,
           client_id: clientMap[invoice.clientName] || null,
+          project_id: projectId,
           subtotal: invoice.subtotal || 0,
           tax_rate: invoice.taxRate,
           tax_amount: invoice.taxAmount,
@@ -179,15 +181,18 @@ async function migrate(data: LocalStorageData) {
   if (data.aiSubscriptions?.length) {
     console.log(`\nMigrating ${data.aiSubscriptions.length} AI subscriptions...`);
     for (const sub of data.aiSubscriptions) {
+      const projectId = sub.projectId ? projectMap[sub.projectId] : null;
       const { error } = await supabase.from("ai_subscriptions").insert({
         tool_name: sub.toolName,
         platform: sub.platform,
         subscription_type: sub.subscriptionType || "Paid",
         email_id: emailMap[sub.emailId] || null,
+        project_id: projectId,
         password: sub.password,
         start_date: sub.startDate || null,
         end_date: sub.endDate || null,
         cancel_by_date: sub.cancelByDate || null,
+        cost: sub.cost,
         manual_status: sub.manualStatus,
         attention_state: sub.attentionState,
         notes: sub.notes,
@@ -238,19 +243,37 @@ async function migrate(data: LocalStorageData) {
   // Migrate business branding
   if (data.businessBranding) {
     console.log(`\nMigrating business branding...`);
-    const { error } = await supabase
+    const brandingData = {
+      business_name: data.businessBranding.businessName || "NBK Business Solutions",
+      tagline: data.businessBranding.tagline,
+      logo_url: data.businessBranding.logoUrl,
+      upi_qr_url: data.businessBranding.upiQrUrl,
+      upi_id: data.businessBranding.upiId,
+      mobile: data.businessBranding.mobile,
+      address: data.businessBranding.address,
+      email: data.businessBranding.email,
+    };
+    
+    const { data: existing } = await supabase
       .from("business_branding")
-      .update({
-        business_name: data.businessBranding.businessName || "NBK Business Solutions",
-        tagline: data.businessBranding.tagline,
-        logo_url: data.businessBranding.logoUrl,
-        upi_qr_url: data.businessBranding.upiQrUrl,
-        upi_id: data.businessBranding.upiId,
-        mobile: data.businessBranding.mobile,
-        address: data.businessBranding.address,
-        email: data.businessBranding.email,
-      })
-      .neq("id", "00000000-0000-0000-0000-000000000000"); // Update any row
+      .select("id")
+      .limit(1)
+      .single();
+    
+    let error;
+    if (existing) {
+      const result = await supabase
+        .from("business_branding")
+        .update(brandingData)
+        .eq("id", existing.id);
+      error = result.error;
+    } else {
+      const result = await supabase
+        .from("business_branding")
+        .insert(brandingData);
+      error = result.error;
+    }
+    
     if (error) {
       console.error(`Failed to update branding:`, error.message);
     } else {
