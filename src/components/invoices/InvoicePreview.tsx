@@ -1,6 +1,8 @@
 import * as React from "react";
 import { format } from "date-fns";
-import { Printer, X } from "lucide-react";
+import { Printer, FileDown, Image, Loader2 } from "lucide-react";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 
 import type { InvoiceItem } from "@/lib/types";
 import { useBusinessBranding } from "@/hooks/useBusinessBranding";
@@ -8,6 +10,7 @@ import { useBusinessBranding } from "@/hooks/useBusinessBranding";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 
 function statusVariant(status: string) {
   switch (status) {
@@ -32,10 +35,93 @@ export default function InvoicePreview({
   onOpenChange: (open: boolean) => void;
 }) {
   const { branding } = useBusinessBranding();
+  const { toast } = useToast();
   const printRef = React.useRef<HTMLDivElement>(null);
+  const [exporting, setExporting] = React.useState<"pdf" | "image" | null>(null);
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleExportPDF = async () => {
+    if (!printRef.current) return;
+    setExporting("pdf");
+    
+    try {
+      const element = printRef.current;
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+      });
+      
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const imgX = (pdfWidth - imgWidth * ratio) / 2;
+      const imgY = 10;
+      
+      pdf.addImage(imgData, "PNG", imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+      pdf.save(`Invoice-${invoice.invoiceNumber}.pdf`);
+      
+      toast({
+        title: "PDF Downloaded",
+        description: `Invoice ${invoice.invoiceNumber} saved as PDF`,
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "Could not generate PDF. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setExporting(null);
+    }
+  };
+
+  const handleExportImage = async () => {
+    if (!printRef.current) return;
+    setExporting("image");
+    
+    try {
+      const element = printRef.current;
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+      });
+      
+      const link = document.createElement("a");
+      link.download = `Invoice-${invoice.invoiceNumber}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+      
+      toast({
+        title: "Image Downloaded",
+        description: `Invoice ${invoice.invoiceNumber} saved as PNG`,
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "Could not generate image. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setExporting(null);
+    }
   };
 
   return (
@@ -44,6 +130,32 @@ export default function InvoicePreview({
         <DialogHeader className="sticky top-0 z-10 bg-background border-b px-6 py-4 flex flex-row items-center justify-between">
           <DialogTitle>Invoice Preview</DialogTitle>
           <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleExportPDF}
+              disabled={exporting !== null}
+            >
+              {exporting === "pdf" ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <FileDown className="mr-2 h-4 w-4" />
+              )}
+              PDF
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleExportImage}
+              disabled={exporting !== null}
+            >
+              {exporting === "image" ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Image className="mr-2 h-4 w-4" />
+              )}
+              Image
+            </Button>
             <Button variant="outline" size="sm" onClick={handlePrint}>
               <Printer className="mr-2 h-4 w-4" /> Print
             </Button>

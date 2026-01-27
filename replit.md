@@ -53,6 +53,12 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
 ## Recent Changes (2026-01-27)
 
+### Invoice Export (PDF & Image):
+- **PDF Export**: Download invoice as professional A4 PDF
+- **Image Export**: Download invoice as high-resolution PNG image
+- **Professional Layout**: Properly spaced, centered, with all branding
+- **Loading States**: Shows spinner while generating exports
+
 ### Post-Creation Previews:
 - **Projects**: After creating a project, automatically redirects to the project detail page
 - **Invoices**: After creating an invoice, automatically shows the invoice preview modal
