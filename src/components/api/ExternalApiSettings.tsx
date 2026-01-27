@@ -48,7 +48,7 @@ export default function ExternalApiSettings() {
         }
         description={
           <DialogDescription>
-            Lovable only builds UI. Your API must implement the endpoints the UI calls (e.g. <code>/account-vault</code>, <code>/projects</code>,
+            Configure external API settings. The API must implement the endpoints the UI calls (e.g. <code>/account-vault</code>, <code>/projects</code>,
             <code> /ai-subscriptions</code>) behind the base URL.
           </DialogDescription>
         }
