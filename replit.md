@@ -21,7 +21,14 @@ Internal control center for NBK Business Solutions to manage client projects, bi
 - Publish directory: `dist`
 
 ## Recent Changes (2026-01-27)
-### New Features:
+### Project Form Improvements:
+- **Username Fields**: Added domain username and deployment username fields to project form
+- **Same as Domain Checkbox**: Auto-copy domain dates to hosting dates when checked
+- **Project Status**: Updated options to "Ongoing", "Completed", "On Hold"
+- **Edit Functionality**: Projects are now fully editable after creation with Edit button
+- **ProjectDetail View**: Shows usernames in the Project Overview section
+
+### Previous Features:
 - **Search Everywhere**: Added search to Projects, AI Subscriptions, Billing, and Email Accounts pages
 - **Email Accounts Module**: New dedicated page for managing email credentials with password masking
 - **Simplified Billing**: Removed Service Catalog, focused on billing records only
@@ -56,12 +63,15 @@ Internal control center for NBK Business Solutions to manage client projects, bi
 
 ## Key Files
 - `src/pages/Dashboard.tsx` - Main dashboard
+- `src/pages/Projects.tsx` - Projects list with create/edit modal
 - `src/pages/ProjectDetail.tsx` - Unified project view
 - `src/pages/ClientDetail.tsx` - Client dossier
 - `src/pages/Billing.tsx` - Billing records
 - `src/pages/EmailAccounts.tsx` - Email credentials management
 - `src/pages/Settings.tsx` - Data backup & API config
 - `src/components/ui/search-input.tsx` - Reusable search component
+- `src/components/projects/ProjectsList.tsx` - Projects table/cards with edit/delete
+- `src/lib/types.ts` - Type definitions including ProjectItem
 - `src/index.css` - NBK brand color palette
 
 ## Routes
@@ -80,6 +90,18 @@ Internal control center for NBK Business Solutions to manage client projects, bi
 - Accent (Gold): `hsl(43, 96%, 56%)`
 - Background: Warm off-white
 
+## Project Fields
+- Client Name, Project Name, Domain Name
+- Domain Provider (Namecheap, GoDaddy, Other)
+- Domain Account Email, Domain Username
+- Deployment Email, Deployment Username
+- Hosting Platform (default: Netlify)
+- Domain Purchase Date, Domain Renewal Date
+- Hosting Start Date, Hosting Renewal Date (with "Same as Domain" option)
+- Project Status: Ongoing, Completed, On Hold
+- Project Amount, Payment Status, Pending Amount
+- Completed Date, Notes
+
 ## TODO Before Launch
 1. Add actual NBK logo images to public folder:
    - `logo-icon.png` (64x64) - Sidebar icon
@@ -94,3 +116,4 @@ Internal control center for NBK Business Solutions to manage client projects, bi
 - Attention states for manual override of automated alerts
 - Calm, professional UI (no flashy colors)
 - Search functionality on all data pages
+- Edit functionality for all data entries

@@ -123,7 +123,7 @@ export default function ProjectDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant={project.status === "Active" ? "default" : project.status === "Completed" ? "secondary" : "outline"}>
+          <Badge variant={project.status === "Ongoing" ? "default" : project.status === "Completed" ? "secondary" : "outline"}>
             {project.status}
           </Badge>
           <AttentionStateSelector
@@ -151,6 +151,11 @@ export default function ProjectDetailPage() {
                     <div className="mt-1 text-xs text-muted-foreground">
                       Provider: {project.domainProvider === "Other" ? project.domainProviderOther : project.domainProvider}
                     </div>
+                    {project.domainUsername && (
+                      <div className="text-xs text-muted-foreground">
+                        Username: {project.domainUsername}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -158,6 +163,11 @@ export default function ProjectDetailPage() {
                   <div>
                     <div className="text-sm font-medium">Hosting</div>
                     <div className="text-sm text-muted-foreground">{project.hostingPlatform}</div>
+                    {project.deploymentUsername && (
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        Username: {project.deploymentUsername}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

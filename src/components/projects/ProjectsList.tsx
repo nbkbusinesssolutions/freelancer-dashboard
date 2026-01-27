@@ -1,4 +1,4 @@
-import { Trash2, Calendar, Clock, DollarSign } from "lucide-react";
+import { Trash2, Calendar, Clock, DollarSign, Pencil } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
 import type { ProjectItem, ProjectStatus, ProjectPaymentStatus } from "@/lib/types";
@@ -48,10 +48,12 @@ export default function ProjectsList({
   items,
   loading,
   onDelete,
+  onEdit,
 }: {
   items: ProjectItem[];
   loading: boolean;
   onDelete: (id: string) => void;
+  onEdit: (project: ProjectItem) => void;
 }) {
   const isMobile = useIsMobile();
 
@@ -129,8 +131,11 @@ export default function ProjectsList({
                   </div>
                 )}
 
-                <div className="mt-4">
-                  <Button variant="outline" className="min-h-11 w-full" onClick={() => onDelete(p.id)}>
+                <div className="mt-4 flex gap-2">
+                  <Button variant="outline" className="min-h-11 flex-1" onClick={() => onEdit(p)}>
+                    <Pencil className="mr-2 h-4 w-4" /> Edit
+                  </Button>
+                  <Button variant="outline" className="min-h-11 flex-1" onClick={() => onDelete(p.id)}>
                     <Trash2 className="mr-2 h-4 w-4" /> Delete
                   </Button>
                 </div>
@@ -218,10 +223,16 @@ export default function ProjectsList({
                 )}
               </TableCell>
               <TableCell className="text-right">
-                <Button variant="outline" size="icon" onClick={() => onDelete(p.id)}>
-                  <Trash2 className="h-4 w-4" />
-                  <span className="sr-only">Delete</span>
-                </Button>
+                <div className="flex justify-end gap-1">
+                  <Button variant="outline" size="icon" onClick={() => onEdit(p)}>
+                    <Pencil className="h-4 w-4" />
+                    <span className="sr-only">Edit</span>
+                  </Button>
+                  <Button variant="outline" size="icon" onClick={() => onDelete(p.id)}>
+                    <Trash2 className="h-4 w-4" />
+                    <span className="sr-only">Delete</span>
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           );

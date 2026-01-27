@@ -23,6 +23,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import EmailCombobox from "@/components/account-vault/EmailCombobox";
 
 import { CreatableCombobox } from "@/components/ui/creatable-combobox";
@@ -44,7 +45,7 @@ function uniqCaseInsensitive(values: string[]) {
   return out;
 }
 
-const STATUSES: ProjectStatus[] = ["Active", "Completed", "On Hold"];
+const STATUSES: ProjectStatus[] = ["Ongoing", "Completed", "On Hold"];
 const PAYMENT_STATUSES: ProjectPaymentStatus[] = ["Paid", "Pending", "Partial"];
 
 const schema = z.object({
@@ -54,12 +55,15 @@ const schema = z.object({
   domainProvider: z.enum(["Namecheap", "GoDaddy", "Other"]),
   domainProviderOther: z.string().trim().max(50).optional(),
   domainEmailId: z.string().min(1, "Select a domain account email"),
+  domainUsername: z.string().trim().max(100).optional(),
   hostingPlatform: z.string().trim().min(1).max(50).default("Netlify"),
   deploymentEmailId: z.string().min(1, "Select a deployment email"),
+  deploymentUsername: z.string().trim().max(100).optional(),
   domainPurchaseDate: z.string().optional(),
   domainRenewalDate: z.string().optional(),
   hostingStartDate: z.string().optional(),
   hostingRenewalDate: z.string().optional(),
+  hostingSameAsDomain: z.boolean().optional(),
   status: z.enum(STATUSES as [ProjectStatus, ...ProjectStatus[]]),
   notes: z.string().trim().max(2000).optional(),
   projectAmount: z.string().trim().optional(),
@@ -80,6 +84,7 @@ export default function ProjectsPage() {
   const del = useDeleteProject();
 
   const [open, setOpen] = React.useState(false);
+  const [editing, setEditing] = React.useState<ProjectItem | null>(null);
   const [search, setSearch] = React.useState("");
   const items = projectsQ.data?.items ?? [];
   const filtered = items.filter((p) => {
@@ -133,13 +138,16 @@ export default function ProjectsPage() {
       domainProvider: "Namecheap",
       domainProviderOther: "",
       domainEmailId: "",
+      domainUsername: "",
       hostingPlatform: "Netlify",
       deploymentEmailId: "",
+      deploymentUsername: "",
       domainPurchaseDate: "",
       domainRenewalDate: "",
       hostingStartDate: "",
       hostingRenewalDate: "",
-      status: "Active",
+      hostingSameAsDomain: false,
+      status: "Ongoing",
       notes: "",
       projectAmount: "",
       paymentStatus: undefined,
@@ -149,12 +157,19 @@ export default function ProjectsPage() {
   });
 
   const domainPurchaseDate = form.watch("domainPurchaseDate");
+  const domainRenewalDate = form.watch("domainRenewalDate");
+  const hostingSameAsDomain = form.watch("hostingSameAsDomain");
+
   React.useEffect(() => {
-    const hostingStartDate = form.getValues("hostingStartDate");
-    if (!hostingStartDate && domainPurchaseDate) {
-      form.setValue("hostingStartDate", domainPurchaseDate);
+    if (hostingSameAsDomain) {
+      if (domainPurchaseDate) {
+        form.setValue("hostingStartDate", domainPurchaseDate);
+      }
+      if (domainRenewalDate) {
+        form.setValue("hostingRenewalDate", domainRenewalDate);
+      }
     }
-  }, [domainPurchaseDate, form]);
+  }, [hostingSameAsDomain, domainPurchaseDate, domainRenewalDate, form]);
 
   function parseMoney(input?: string) {
     const n = Number(String(input ?? "").replace(/[^0-9.]/g, ""));
@@ -163,19 +178,25 @@ export default function ProjectsPage() {
 
   async function onSubmit(values: z.infer<typeof schema>) {
     try {
+      const hostingStartDate = values.hostingSameAsDomain ? values.domainPurchaseDate : values.hostingStartDate;
+      const hostingRenewalDate = values.hostingSameAsDomain ? values.domainRenewalDate : values.hostingRenewalDate;
+
       await upsert.mutateAsync({
+        ...(editing?.id ? { id: editing.id } : {}),
         clientName: values.clientName,
         projectName: values.projectName,
         domainName: values.domainName,
         domainProvider: values.domainProvider,
         domainProviderOther: values.domainProvider === "Other" ? (values.domainProviderOther?.trim() || null) : null,
         domainEmailId: values.domainEmailId,
+        domainUsername: values.domainUsername?.trim() || null,
         hostingPlatform: values.hostingPlatform,
         deploymentEmailId: values.deploymentEmailId,
+        deploymentUsername: values.deploymentUsername?.trim() || null,
         domainPurchaseDate: values.domainPurchaseDate || null,
         domainRenewalDate: values.domainRenewalDate || null,
-        hostingStartDate: values.hostingStartDate || values.domainPurchaseDate || null,
-        hostingRenewalDate: values.hostingRenewalDate || null,
+        hostingStartDate: hostingStartDate || values.domainPurchaseDate || null,
+        hostingRenewalDate: hostingRenewalDate || null,
         status: values.status,
         notes: values.notes?.trim() || null,
         projectAmount: parseMoney(values.projectAmount),
@@ -183,8 +204,9 @@ export default function ProjectsPage() {
         completedDate: values.completedDate || null,
         pendingAmount: parseMoney(values.pendingAmount),
       });
-      toast({ title: "Project saved" });
+      toast({ title: editing ? "Project updated" : "Project created" });
       setOpen(false);
+      setEditing(null);
       form.reset();
     } catch (e: any) {
       toast({ title: "Save failed", description: e?.message ? String(e.message) : "Check your API.", variant: "destructive" });
@@ -198,7 +220,7 @@ export default function ProjectsPage() {
           <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">Projects</h1>
           <p className="text-sm text-muted-foreground">Client website management with clear account traceability.</p>
         </div>
-        <Button className="min-h-11 w-full sm:w-auto" onClick={() => setOpen(true)}>
+        <Button className="min-h-11 w-full sm:w-auto" onClick={() => { setEditing(null); setOpen(true); }}>
           <Plus className="mr-2 h-4 w-4" /> Create Project
         </Button>
       </header>
@@ -219,6 +241,33 @@ export default function ProjectsPage() {
           <ProjectsList
             items={filtered}
             loading={projectsQ.isLoading}
+            onEdit={(project) => {
+              setEditing(project);
+              form.reset({
+                clientName: project.clientName,
+                projectName: project.projectName,
+                domainName: project.domainName,
+                domainProvider: project.domainProvider,
+                domainProviderOther: project.domainProviderOther ?? "",
+                domainEmailId: project.domainEmailId,
+                domainUsername: project.domainUsername ?? "",
+                hostingPlatform: project.hostingPlatform,
+                deploymentEmailId: project.deploymentEmailId,
+                deploymentUsername: project.deploymentUsername ?? "",
+                domainPurchaseDate: project.domainPurchaseDate ?? "",
+                domainRenewalDate: project.domainRenewalDate ?? "",
+                hostingStartDate: project.hostingStartDate ?? "",
+                hostingRenewalDate: project.hostingRenewalDate ?? "",
+                hostingSameAsDomain: project.hostingStartDate === project.domainPurchaseDate && project.hostingRenewalDate === project.domainRenewalDate,
+                status: project.status,
+                notes: project.notes ?? "",
+                projectAmount: project.projectAmount ? String(project.projectAmount) : "",
+                paymentStatus: project.paymentStatus ?? undefined,
+                completedDate: project.completedDate ?? "",
+                pendingAmount: project.pendingAmount ? String(project.pendingAmount) : "",
+              });
+              setOpen(true);
+            }}
             onDelete={async (id) => {
               try {
                 await del.mutateAsync(id);
@@ -233,8 +282,14 @@ export default function ProjectsPage() {
 
       <ResponsiveModal
         open={open}
-        onOpenChange={setOpen}
-        title="Create Project"
+        onOpenChange={(isOpen) => {
+          setOpen(isOpen);
+          if (!isOpen) {
+            setEditing(null);
+            form.reset();
+          }
+        }}
+        title={editing ? "Edit Project" : "Create Project"}
         description="Everything references Account Vault first."
         contentClassName="max-w-2xl"
         footer={
@@ -380,6 +435,35 @@ export default function ProjectsPage() {
                 />
               </div>
 
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="domainUsername"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Domain Account Username</FormLabel>
+                      <FormControl>
+                        <Input className="min-h-11" placeholder="Username for domain account" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="deploymentUsername"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Deployment Username</FormLabel>
+                      <FormControl>
+                        <Input className="min-h-11" placeholder="Username for deployment account" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <FormField
                   control={form.control}
@@ -429,6 +513,29 @@ export default function ProjectsPage() {
                     </FormItem>
                   )}
                 />
+              </div>
+
+              <div className="flex items-center gap-2 py-2">
+                <FormField
+                  control={form.control}
+                  name="hostingSameAsDomain"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center gap-2 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormLabel className="text-sm font-normal cursor-pointer">
+                        Hosting dates same as domain dates
+                      </FormLabel>
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="hostingStartDate"
@@ -436,16 +543,17 @@ export default function ProjectsPage() {
                     <FormItem>
                       <FormLabel>Hosting Start Date</FormLabel>
                       <FormControl>
-                        <Input className="min-h-11" type="date" {...field} />
+                        <Input 
+                          className="min-h-11" 
+                          type="date" 
+                          {...field} 
+                          disabled={hostingSameAsDomain}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <div className="hidden md:block" />
                 <FormField
                   control={form.control}
                   name="hostingRenewalDate"
@@ -453,13 +561,17 @@ export default function ProjectsPage() {
                     <FormItem>
                       <FormLabel>Hosting Renewal Date</FormLabel>
                       <FormControl>
-                        <Input className="min-h-11" type="date" {...field} />
+                        <Input 
+                          className="min-h-11" 
+                          type="date" 
+                          {...field} 
+                          disabled={hostingSameAsDomain}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <div className="hidden md:block" />
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

@@ -8,7 +8,7 @@ export type Platform =
   | "Replit"
   | "Other";
 
-export type ProjectStatus = "Active" | "Completed" | "On Hold";
+export type ProjectStatus = "Ongoing" | "Completed" | "On Hold";
 export type ProjectPaymentStatus = "Paid" | "Pending" | "Partial";
 export type SubscriptionType = "Free Trial" | "Paid";
 
@@ -53,10 +53,10 @@ export type ProjectItem = {
   domainProvider: "Namecheap" | "GoDaddy" | "Other";
   domainProviderOther?: string | null;
   domainEmailId: string; // FK to AccountVaultItem
-  domainUsernameOverride?: string | null;
+  domainUsername?: string | null; // username for domain account
   hostingPlatform: string; // default Netlify
   deploymentEmailId: string; // FK to AccountVaultItem
-  deploymentUsernameOverride?: string | null;
+  deploymentUsername?: string | null; // username for deployment account
   domainPurchaseDate?: string | null; // ISO date
   domainRenewalDate?: string | null; // ISO date
   hostingStartDate?: string | null; // ISO date

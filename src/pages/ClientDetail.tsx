@@ -125,7 +125,7 @@ export default function ClientDetailPage() {
                     )}
                     <Badge
                       variant={
-                        project.status === "Active"
+                        project.status === "Ongoing"
                           ? "default"
                           : project.status === "Completed"
                           ? "secondary"
