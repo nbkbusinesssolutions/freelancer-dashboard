@@ -77,6 +77,7 @@ export default function EmailAccountsPage() {
   const [open, setOpen] = React.useState(false);
   const [bulkOpen, setBulkOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<EmailAccountItem | null>(null);
+  const [previewItem, setPreviewItem] = React.useState<EmailAccountItem | null>(null);
   const [visiblePasswords, setVisiblePasswords] = React.useState<Set<string>>(new Set());
   const isMobile = useIsMobile();
 
@@ -140,7 +141,7 @@ export default function EmailAccountsPage() {
   }, [bulkOpen, bulkForm]);
 
   function onSubmit(values: z.infer<typeof schema>) {
-    upsert({
+    const result = upsert({
       id: editing?.id,
       email: values.email,
       provider: values.provider,
@@ -153,6 +154,10 @@ export default function EmailAccountsPage() {
     });
     toast({ title: editing ? "Email account updated" : "Email account added" });
     setOpen(false);
+    
+    if (!editing && result) {
+      setPreviewItem(result);
+    }
     setEditing(null);
   }
 
@@ -785,6 +790,57 @@ export default function EmailAccountsPage() {
           </form>
         </Form>
       </ResponsiveModal>
+
+      {/* Preview Modal after creation */}
+      {previewItem && (
+        <ResponsiveModal
+          open={!!previewItem}
+          onOpenChange={(o) => !o && setPreviewItem(null)}
+          title="Email Account Added"
+          description="Here's a summary of the email account you just added."
+          contentClassName="max-w-lg"
+        >
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Email</p>
+                <p className="font-medium break-all">{previewItem.email}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Provider</p>
+                <p className="font-medium">{previewItem.provider}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Status</p>
+                <Badge variant={previewItem.status === "Active" ? "default" : "secondary"}>
+                  {previewItem.status}
+                </Badge>
+              </div>
+              {previewItem.tags && previewItem.tags.length > 0 && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Tags</p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {previewItem.tags.map((tag) => (
+                      <Badge key={tag} variant="outline" className="text-xs">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            {previewItem.notes && (
+              <div>
+                <p className="text-sm text-muted-foreground">Notes</p>
+                <p className="text-sm">{previewItem.notes}</p>
+              </div>
+            )}
+            <div className="flex justify-end pt-2">
+              <Button onClick={() => setPreviewItem(null)}>Close</Button>
+            </div>
+          </div>
+        </ResponsiveModal>
+      )}
     </main>
   );
 }

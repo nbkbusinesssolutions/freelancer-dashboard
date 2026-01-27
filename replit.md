@@ -23,11 +23,23 @@ Internal control center for NBK Business Solutions to manage client projects, in
 
 ## Recent Changes (2026-01-27)
 
+### Post-Creation Previews:
+- **Projects**: After creating a project, automatically redirects to the project detail page
+- **Invoices**: After creating an invoice, automatically shows the invoice preview modal
+- **AI Subscriptions**: After creating a subscription, shows a detail summary modal
+- **Email Accounts**: After adding an email, shows the email account details modal
+
 ### Form Submission Fixes:
 - **Fixed All Forms**: Moved submit buttons inside form elements for reliable submission
 - **Validation Feedback**: Added toast notifications when form validation fails
 - **Affected Pages**: Projects, Invoices, AI Subscriptions, Email Accounts
 - **Improved UX**: Clear description that email accounts must be added before creating projects
+
+### Mobile Responsiveness:
+- **All Lists**: Automatically switch from table to card layout on mobile
+- **Forms**: Use drawer modals on mobile, dialog on desktop (ResponsiveModal)
+- **Buttons**: All buttons have min-h-11 for proper touch targets
+- **Grid Layouts**: Responsive columns that stack on mobile
 
 ### Project Detail Page Redesign:
 - **Comprehensive Layout**: All project fields now displayed in organized card sections

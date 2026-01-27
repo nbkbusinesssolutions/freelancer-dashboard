@@ -3,7 +3,7 @@ import { Plus } from "lucide-react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 
 import { toast } from "@/hooks/use-toast";
 import { useDeleteProject, useProjects, useUpsertProject } from "@/hooks/useApiData";
@@ -75,6 +75,7 @@ const schema = z.object({
 
 export default function ProjectsPage() {
   const [params] = useSearchParams();
+  const navigate = useNavigate();
   const filterStatus = (params.get("status") as ProjectStatus | null) ?? null;
   const filterRenewal = (params.get("renewal") as "domain" | "hosting" | "overdue" | null) ?? null;
   const filterPayment = params.get("payment") ?? null;
@@ -195,7 +196,7 @@ export default function ProjectsPage() {
       const hostingStartDate = values.hostingSameAsDomain ? values.domainPurchaseDate : values.hostingStartDate;
       const hostingRenewalDate = values.hostingSameAsDomain ? values.domainRenewalDate : values.hostingRenewalDate;
 
-      await upsert.mutateAsync({
+      const result = await upsert.mutateAsync({
         ...(editing?.id ? { id: editing.id } : {}),
         clientName: values.clientName,
         projectName: values.projectName,
@@ -222,6 +223,10 @@ export default function ProjectsPage() {
       setOpen(false);
       setEditing(null);
       form.reset();
+      
+      if (!editing && result?.id) {
+        navigate(`/projects/${result.id}`);
+      }
     } catch (e: any) {
       toast({ title: "Save failed", description: e?.message ? String(e.message) : "Check your API.", variant: "destructive" });
     }

@@ -216,8 +216,8 @@ export default function InvoicesPage() {
     const paidAmount = values.paidAmount || 0;
     const balanceDue = Math.max(0, grandTotal - paidAmount);
 
-    upsert({
-      id: editing?.id,
+    const invoiceData: InvoiceItem = {
+      id: editing?.id || crypto.randomUUID(),
       invoiceNumber: values.invoiceNumber,
       invoiceDate: values.invoiceDate,
       dueDate: values.dueDate || null,
@@ -236,10 +236,16 @@ export default function InvoicesPage() {
       paymentStatus: values.paymentStatus,
       notes: values.notes || null,
       createdAt: editing?.createdAt || new Date().toISOString(),
-    });
+    };
+    
+    upsert(invoiceData);
 
     toast({ title: editing ? "Invoice updated" : "Invoice created" });
     setOpen(false);
+    
+    if (!editing) {
+      setPreviewInvoice(invoiceData);
+    }
     setEditing(null);
   }
 

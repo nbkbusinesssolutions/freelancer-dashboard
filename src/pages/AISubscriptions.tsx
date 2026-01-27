@@ -93,6 +93,7 @@ export default function AISubscriptionsPage() {
 
   const [open, setOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<import("@/lib/types").AISubscriptionItem | null>(null);
+  const [previewItem, setPreviewItem] = React.useState<import("@/lib/types").AISubscriptionItem | null>(null);
   const [search, setSearch] = React.useState("");
 
   const items = (q.data?.items ?? []).map((s) => ({ ...s, computedStatus: computeSubscriptionStatus(s) }));
@@ -138,7 +139,7 @@ export default function AISubscriptionsPage() {
     const platformOther = isCorePlatform ? null : platformName;
 
     try {
-      await upsert.mutateAsync({
+      const result = await upsert.mutateAsync({
         ...(editing?.id ? { id: editing.id } : {}),
         toolName: values.toolName,
         platform,
@@ -156,6 +157,10 @@ export default function AISubscriptionsPage() {
       setOpen(false);
       setEditing(null);
       form.reset();
+      
+      if (!editing && result) {
+        setPreviewItem(result);
+      }
     } catch (e: any) {
       toast({ title: "Save failed", description: e?.message ? String(e.message) : "", variant: "destructive" });
     }
@@ -419,6 +424,67 @@ export default function AISubscriptionsPage() {
             </form>
         </Form>
       </ResponsiveModal>
+
+      {/* Preview Modal after creation */}
+      {previewItem && (
+        <ResponsiveModal
+          open={!!previewItem}
+          onOpenChange={(o) => !o && setPreviewItem(null)}
+          title="Subscription Created"
+          description="Here's a summary of what you just added."
+          contentClassName="max-w-lg"
+        >
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Tool Name</p>
+                <p className="font-medium">{previewItem.toolName}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Platform</p>
+                <p className="font-medium">
+                  {previewItem.platform === "Other" ? previewItem.platformOther : previewItem.platform}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Type</p>
+                <p className="font-medium">{previewItem.subscriptionType}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Status</p>
+                <p className="font-medium">{computeSubscriptionStatus(previewItem)}</p>
+              </div>
+              {previewItem.startDate && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Start Date</p>
+                  <p className="font-medium">{previewItem.startDate}</p>
+                </div>
+              )}
+              {previewItem.endDate && (
+                <div>
+                  <p className="text-sm text-muted-foreground">End Date</p>
+                  <p className="font-medium">{previewItem.endDate}</p>
+                </div>
+              )}
+              {previewItem.cancelByDate && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Cancel By</p>
+                  <p className="font-medium">{previewItem.cancelByDate}</p>
+                </div>
+              )}
+            </div>
+            {previewItem.notes && (
+              <div>
+                <p className="text-sm text-muted-foreground">Notes</p>
+                <p className="text-sm">{previewItem.notes}</p>
+              </div>
+            )}
+            <div className="flex justify-end pt-2">
+              <Button onClick={() => setPreviewItem(null)}>Close</Button>
+            </div>
+          </div>
+        </ResponsiveModal>
+      )}
     </main>
   );
 }
