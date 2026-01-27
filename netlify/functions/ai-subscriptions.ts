@@ -107,7 +107,7 @@ function transformToDb(body: any) {
     tool_name: body.toolName,
     platform: body.platform,
     subscription_type: body.subscriptionType,
-    email_id: body.emailId,
+    email_id: body.emailId || null,
     password: body.password,
     start_date: body.startDate || null,
     end_date: body.endDate || null,

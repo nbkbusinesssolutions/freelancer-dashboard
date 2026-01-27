@@ -59,7 +59,7 @@ const TYPES: SubscriptionType[] = ["Free Trial", "Paid"];
 const schema = z.object({
   toolName: z.string().trim().min(1).max(100),
   platformName: z.string().trim().min(1, "Select or type a platform").max(50),
-  emailId: z.string().min(1, "Select an email"),
+  emailId: z.string().optional(),
   password: z.string().trim().max(200).optional(),
   subscriptionType: z.enum(TYPES as [SubscriptionType, ...SubscriptionType[]]),
   startDate: z.string().optional(),
