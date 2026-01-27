@@ -1,4 +1,4 @@
-import { Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 
 import type { AISubscriptionItem } from "@/lib/types";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -31,10 +31,12 @@ function statusVariant(status: string) {
 export default function AISubscriptionsList({
   items,
   loading,
+  onEdit,
   onDelete,
 }: {
   items: ItemWithStatus[];
   loading: boolean;
+  onEdit: (item: AISubscriptionItem) => void;
   onDelete: (id: string) => void;
 }) {
   const isMobile = useIsMobile();
@@ -57,10 +59,13 @@ export default function AISubscriptionsList({
                   <Badge variant={statusVariant(s.computedStatus)}>{s.computedStatus}</Badge>
                 </div>
 
-                <div className="mt-4">
+                <div className="mt-4 flex gap-2">
+                  <Button variant="outline" className="flex-1" onClick={() => onEdit(s)}>
+                    <Pencil className="mr-2 h-4 w-4" /> Edit
+                  </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="outline" className="w-full">
+                      <Button variant="outline" className="flex-1">
                         <Trash2 className="mr-2 h-4 w-4" /> Delete
                       </Button>
                     </AlertDialogTrigger>
@@ -118,13 +123,18 @@ export default function AISubscriptionsList({
               </TableCell>
               <TableCell>{s.cancelByDate || "—"}</TableCell>
               <TableCell className="text-right">
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="outline" size="icon">
-                      <Trash2 className="h-4 w-4" />
-                      <span className="sr-only">Delete</span>
-                    </Button>
-                  </AlertDialogTrigger>
+                <div className="flex justify-end gap-1">
+                  <Button variant="outline" size="icon" onClick={() => onEdit(s)}>
+                    <Pencil className="h-4 w-4" />
+                    <span className="sr-only">Edit</span>
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" size="icon">
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Delete</span>
+                      </Button>
+                    </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>Delete Subscription</AlertDialogTitle>
@@ -142,7 +152,8 @@ export default function AISubscriptionsList({
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
-                </AlertDialog>
+                  </AlertDialog>
+                </div>
               </TableCell>
             </TableRow>
           ))}

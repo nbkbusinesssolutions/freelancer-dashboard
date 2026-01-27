@@ -92,6 +92,7 @@ export default function AISubscriptionsPage() {
   }, [tools.items, q.data?.items]);
 
   const [open, setOpen] = React.useState(false);
+  const [editing, setEditing] = React.useState<import("@/lib/types").AISubscriptionItem | null>(null);
   const [search, setSearch] = React.useState("");
 
   const items = (q.data?.items ?? []).map((s) => ({ ...s, computedStatus: computeSubscriptionStatus(s) }));
@@ -138,6 +139,7 @@ export default function AISubscriptionsPage() {
 
     try {
       await upsert.mutateAsync({
+        ...(editing?.id ? { id: editing.id } : {}),
         toolName: values.toolName,
         platform,
         platformOther,
@@ -150,8 +152,9 @@ export default function AISubscriptionsPage() {
         manualStatus: values.cancelled ? "Cancelled" : null,
         notes: values.notes?.trim() || null,
       });
-      toast({ title: "Subscription saved" });
+      toast({ title: editing ? "Subscription updated" : "Subscription saved" });
       setOpen(false);
+      setEditing(null);
       form.reset();
     } catch (e: any) {
       toast({ title: "Save failed", description: e?.message ? String(e.message) : "", variant: "destructive" });
@@ -165,7 +168,7 @@ export default function AISubscriptionsPage() {
           <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">AI Subscriptions</h1>
           <p className="text-sm text-muted-foreground">Prevent forgotten trials and surprise charges.</p>
         </div>
-        <Button className="min-h-11 w-full sm:w-auto" onClick={() => setOpen(true)}>
+        <Button className="min-h-11 w-full sm:w-auto" onClick={() => { setEditing(null); setOpen(true); }}>
           <Plus className="mr-2 h-4 w-4" /> Add Subscription
         </Button>
       </header>
@@ -186,6 +189,23 @@ export default function AISubscriptionsPage() {
           <AISubscriptionsList
             items={filtered}
             loading={q.isLoading}
+            onEdit={(item) => {
+              setEditing(item);
+              const platformName = item.platform === "Other" ? item.platformOther : item.platform;
+              form.reset({
+                toolName: item.toolName,
+                platformName: platformName ?? "",
+                emailId: item.emailId,
+                password: item.password ?? "",
+                subscriptionType: item.subscriptionType,
+                startDate: item.startDate ?? "",
+                endDate: item.endDate ?? "",
+                cancelByDate: item.cancelByDate ?? "",
+                cancelled: item.manualStatus === "Cancelled",
+                notes: item.notes ?? "",
+              });
+              setOpen(true);
+            }}
             onDelete={async (id) => {
               try {
                 await del.mutateAsync(id);
@@ -200,8 +220,14 @@ export default function AISubscriptionsPage() {
 
       <ResponsiveModal
         open={open}
-        onOpenChange={setOpen}
-        title="Add Subscription"
+        onOpenChange={(isOpen) => {
+          setOpen(isOpen);
+          if (!isOpen) {
+            setEditing(null);
+            form.reset();
+          }
+        }}
+        title={editing ? "Edit Subscription" : "Add Subscription"}
         description="Personal tools only. Optional password is temporary storage."
         contentClassName="max-w-2xl"
         footer={
