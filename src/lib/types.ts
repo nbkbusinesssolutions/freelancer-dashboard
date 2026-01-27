@@ -12,6 +12,29 @@ export type ProjectStatus = "Active" | "Completed" | "On Hold";
 export type ProjectPaymentStatus = "Paid" | "Pending" | "Partial";
 export type SubscriptionType = "Free Trial" | "Paid";
 
+export type AttentionState = "stable" | "review" | "action" | "risk";
+
+export type ActionItemContext = {
+  type: "project" | "client";
+  id: string;
+};
+
+export type ActionItem = {
+  id: string;
+  text: string;
+  dueDate?: string | null;
+  completed: boolean;
+  context: ActionItemContext;
+  createdAt: string;
+};
+
+export type ProjectLogEntry = {
+  id: string;
+  projectId: string;
+  text: string;
+  createdAt: string;
+};
+
 export type AccountVaultItem = {
   id: string;
   email: string;
@@ -44,6 +67,7 @@ export type ProjectItem = {
   paymentStatus?: ProjectPaymentStatus | null;
   completedDate?: string | null; // ISO date
   pendingAmount?: number | null;
+  attentionState?: AttentionState | null;
 };
 
 export type SubscriptionManualStatus = "Cancelled" | null;
@@ -62,6 +86,7 @@ export type AISubscriptionItem = {
   cancelByDate?: string | null;
   manualStatus?: SubscriptionManualStatus;
   notes?: string | null;
+  attentionState?: AttentionState | null;
 };
 
 export type ServiceCadence = "One-time" | "Monthly" | "Yearly";
