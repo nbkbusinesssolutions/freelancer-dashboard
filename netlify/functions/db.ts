@@ -13,12 +13,20 @@ export function getDb() {
 export function snakeToCamel(obj: any): any {
   if (obj === null || obj === undefined) return obj;
   if (Array.isArray(obj)) return obj.map(snakeToCamel);
+  // Handle Date objects - convert to ISO string
+  if (obj instanceof Date) return obj.toISOString();
   if (typeof obj !== "object") return obj;
   
   const converted: any = {};
   for (const key in obj) {
     const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
-    converted[camelKey] = snakeToCamel(obj[key]);
+    const value = obj[key];
+    // Convert Date objects to ISO strings
+    if (value instanceof Date) {
+      converted[camelKey] = value.toISOString();
+    } else {
+      converted[camelKey] = snakeToCamel(value);
+    }
   }
   return converted;
 }
@@ -26,6 +34,8 @@ export function snakeToCamel(obj: any): any {
 export function camelToSnake(obj: any): any {
   if (obj === null || obj === undefined) return obj;
   if (Array.isArray(obj)) return obj.map(camelToSnake);
+  // Keep Date objects as-is for database insertion
+  if (obj instanceof Date) return obj;
   if (typeof obj !== "object") return obj;
   
   const converted: any = {};
