@@ -10,7 +10,12 @@ export default async (request: Request, context: Context) => {
 
   try {
     if (request.method === "GET") {
-      const rows = await sql`SELECT * FROM projects ORDER BY created_at DESC`;
+      const rows = await sql`
+        SELECT p.*, c.name as client_name 
+        FROM projects p 
+        LEFT JOIN clients c ON p.client_id = c.id 
+        ORDER BY p.created_at DESC
+      `;
       return jsonResponse({ items: rows.map(snakeToCamel) });
     }
 
@@ -32,9 +37,9 @@ export default async (request: Request, context: Context) => {
       const d = camelToSnake({ ...body, clientId });
       
       if (body.id) {
-        const rows = await sql`
+        await sql`
           UPDATE projects SET 
-            client_id = ${d.client_id},
+            client_id = ${clientId},
             project_name = ${d.project_name},
             domain_name = ${d.domain_name},
             domain_provider = ${d.domain_provider},
@@ -55,9 +60,14 @@ export default async (request: Request, context: Context) => {
             attention_state = ${d.attention_state},
             notes = ${d.notes}
           WHERE id = ${body.id}
-          RETURNING *
         `;
-        return jsonResponse(snakeToCamel(rows[0]));
+        const updated = await sql`
+          SELECT p.*, c.name as client_name 
+          FROM projects p 
+          LEFT JOIN clients c ON p.client_id = c.id 
+          WHERE p.id = ${body.id}
+        `;
+        return jsonResponse(snakeToCamel(updated[0]));
       } else {
         const rows = await sql`
           INSERT INTO projects (
@@ -67,15 +77,22 @@ export default async (request: Request, context: Context) => {
             hosting_start_date, hosting_renewal_date, status, project_amount,
             payment_status, pending_amount, completed_date, attention_state, notes
           ) VALUES (
-            ${d.client_id}, ${d.project_name}, ${d.domain_name}, ${d.domain_provider},
+            ${clientId}, ${d.project_name}, ${d.domain_name}, ${d.domain_provider},
             ${d.domain_email_id}, ${d.domain_username}, ${d.deployment_email_id}, ${d.deployment_username},
             ${d.hosting_platform}, ${d.domain_purchase_date}, ${d.domain_renewal_date},
             ${d.hosting_start_date}, ${d.hosting_renewal_date}, ${d.status}, ${d.project_amount},
             ${d.payment_status}, ${d.pending_amount}, ${d.completed_date}, ${d.attention_state}, ${d.notes}
           )
-          RETURNING *
+          RETURNING id
         `;
-        return jsonResponse(snakeToCamel(rows[0]));
+        const newId = rows[0].id;
+        const inserted = await sql`
+          SELECT p.*, c.name as client_name 
+          FROM projects p 
+          LEFT JOIN clients c ON p.client_id = c.id 
+          WHERE p.id = ${newId}
+        `;
+        return jsonResponse(snakeToCamel(inserted[0]));
       }
     }
 
