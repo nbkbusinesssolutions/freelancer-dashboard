@@ -163,17 +163,15 @@ INSERT INTO business_branding (business_name, tagline)
 SELECT 'NBK Business Solutions', 'Professional Web Development & Design'
 WHERE NOT EXISTS (SELECT 1 FROM business_branding);
 
--- Enable Row Level Security (optional - for multi-user scenarios)
--- ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE email_accounts ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE invoice_items ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE ai_subscriptions ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE action_items ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE project_logs ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE business_branding ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE effort_logs ENABLE ROW LEVEL SECURITY;
-
--- For now, allow all operations (anonymous access for internal tool)
--- You can add RLS policies later if you need authentication
+-- Disable Row Level Security for internal tool (single-user)
+-- This allows anonymous access via the anon key
+ALTER TABLE clients DISABLE ROW LEVEL SECURITY;
+ALTER TABLE email_accounts DISABLE ROW LEVEL SECURITY;
+ALTER TABLE projects DISABLE ROW LEVEL SECURITY;
+ALTER TABLE invoices DISABLE ROW LEVEL SECURITY;
+ALTER TABLE invoice_items DISABLE ROW LEVEL SECURITY;
+ALTER TABLE ai_subscriptions DISABLE ROW LEVEL SECURITY;
+ALTER TABLE action_items DISABLE ROW LEVEL SECURITY;
+ALTER TABLE project_logs DISABLE ROW LEVEL SECURITY;
+ALTER TABLE business_branding DISABLE ROW LEVEL SECURITY;
+ALTER TABLE effort_logs DISABLE ROW LEVEL SECURITY;
