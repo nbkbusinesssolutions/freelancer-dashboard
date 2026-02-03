@@ -29,6 +29,7 @@ import { Switch } from "@/components/ui/switch";
 import { CreatableCombobox } from "@/components/ui/creatable-combobox";
 import { ResponsiveModal } from "@/components/ui/responsive-modal";
 import AISubscriptionsList from "@/components/ai-subscriptions/AISubscriptionsList";
+import AISpendSummary from "@/components/ai-subscriptions/AISpendSummary";
 import { useMasterList } from "@/hooks/useMasterList";
 
 function uniqCaseInsensitive(values: string[]) {
@@ -95,9 +96,15 @@ export default function AISubscriptionsPage() {
   const [editing, setEditing] = React.useState<import("@/lib/types").AISubscriptionItem | null>(null);
   const [previewItem, setPreviewItem] = React.useState<import("@/lib/types").AISubscriptionItem | null>(null);
   const [search, setSearch] = React.useState("");
+  const [sortByCost, setSortByCost] = React.useState(false);
 
   const items = (q.data?.items ?? []).map((s) => ({ ...s, computedStatus: computeSubscriptionStatus(s) }));
-  const filtered = (filterStatus ? items.filter((s) => s.computedStatus === filterStatus) : items).filter((s) => {
+  
+  const activeItems = items.filter((s) => s.computedStatus === "Active" || s.computedStatus === "Expiring Soon");
+  const totalMonthlySpend = activeItems.reduce((sum, s) => sum + (s.cost || 0), 0);
+  const activeCount = activeItems.length;
+
+  let filtered = (filterStatus ? items.filter((s) => s.computedStatus === filterStatus) : items).filter((s) => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
     const platName = s.platform === "Other" ? s.platformOther : s.platform;
@@ -107,6 +114,10 @@ export default function AISubscriptionsPage() {
       (s.notes?.toLowerCase().includes(q) ?? false)
     );
   });
+
+  if (sortByCost) {
+    filtered = [...filtered].sort((a, b) => (b.cost || 0) - (a.cost || 0));
+  }
 
   React.useEffect(() => {
     if (!focusId) return;
@@ -177,6 +188,13 @@ export default function AISubscriptionsPage() {
           <Plus className="mr-2 h-4 w-4" /> Add Subscription
         </Button>
       </header>
+
+      <AISpendSummary
+        totalMonthlySpend={totalMonthlySpend}
+        activeSubscriptions={activeCount}
+        sortByCost={sortByCost}
+        onToggleSortByCost={() => setSortByCost(!sortByCost)}
+      />
 
       <Card>
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

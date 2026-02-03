@@ -12,6 +12,7 @@ const DEFAULT_BRANDING: BusinessBranding = {
   mobile: null,
   address: null,
   email: null,
+  defaultHourlyRate: null,
 };
 
 function loadBranding(): BusinessBranding {

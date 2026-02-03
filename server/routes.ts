@@ -615,6 +615,53 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  app.get("/api/effort-logs", async (req, res) => {
+    try {
+      const projectId = req.query.projectId as string | undefined;
+      
+      let results;
+      if (projectId) {
+        results = await db.query.effortLogs.findMany({
+          where: eq(schema.effortLogs.projectId, projectId),
+          orderBy: desc(schema.effortLogs.date),
+        });
+      } else {
+        results = await db.query.effortLogs.findMany({
+          orderBy: desc(schema.effortLogs.date),
+        });
+      }
+      return res.json({ items: results.map(transformEffortLog) });
+    } catch (err) {
+      return res.status(500).json({ error: err instanceof Error ? err.message : "Unknown error" });
+    }
+  });
+
+  app.post("/api/effort-logs", async (req, res) => {
+    try {
+      const body = req.body;
+      const [result] = await db.insert(schema.effortLogs).values({
+        projectId: body.projectId,
+        date: body.date,
+        hours: body.hours,
+        notes: body.notes || null,
+      }).returning();
+      return res.status(201).json(transformEffortLog(result));
+    } catch (err) {
+      return res.status(400).json({ error: err instanceof Error ? err.message : "Unknown error" });
+    }
+  });
+
+  app.delete("/api/effort-logs", async (req, res) => {
+    try {
+      const id = req.query.id as string;
+      if (!id) return res.status(400).json({ error: "Missing id parameter" });
+      await db.delete(schema.effortLogs).where(eq(schema.effortLogs.id, id));
+      return res.json({ success: true });
+    } catch (err) {
+      return res.status(400).json({ error: err instanceof Error ? err.message : "Unknown error" });
+    }
+  });
+
   app.get("/api/branding", async (req, res) => {
     try {
       const result = await db.query.businessBranding.findFirst();
@@ -641,6 +688,7 @@ export function registerRoutes(app: Express) {
             mobile: body.mobile,
             address: body.address,
             email: body.email,
+            defaultHourlyRate: toNullIfEmpty(body.defaultHourlyRate),
             updatedAt: new Date(),
           })
           .where(eq(schema.businessBranding.id, existing.id))
@@ -656,6 +704,7 @@ export function registerRoutes(app: Express) {
           mobile: body.mobile,
           address: body.address,
           email: body.email,
+          defaultHourlyRate: toNullIfEmpty(body.defaultHourlyRate),
         }).returning();
         return res.status(201).json(transformBranding(result));
       }
@@ -801,5 +850,17 @@ function transformBranding(row: any) {
     mobile: row.mobile,
     address: row.address,
     email: row.email,
+    defaultHourlyRate: row.defaultHourlyRate ? parseFloat(row.defaultHourlyRate) : null,
+  };
+}
+
+function transformEffortLog(row: any) {
+  return {
+    id: row.id,
+    projectId: row.projectId,
+    date: row.date,
+    hours: row.hours ? parseFloat(row.hours) : 0,
+    notes: row.notes,
+    createdAt: row.createdAt,
   };
 }

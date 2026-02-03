@@ -13,8 +13,12 @@ import { useEmailAccounts } from "@/hooks/useEmailAccounts";
 import { useInvoices } from "@/hooks/useInvoices";
 import { useActions } from "@/hooks/use-actions";
 import { useProjectLog } from "@/hooks/use-project-log";
+import { useEffortLogs } from "@/hooks/useEffortLogs";
+import { useBusinessBranding } from "@/hooks/useBusinessBranding";
 import ActionItemsSection from "@/components/actions/ActionItemsSection";
 import ProjectLogSection from "@/components/project-log/ProjectLogSection";
+import EffortLogSection from "@/components/effort-log/EffortLogSection";
+import ProfitabilityDisplay from "@/components/project/ProfitabilityDisplay";
 import AttentionStateSelector from "@/components/attention/AttentionStateSelector";
 
 import type { AttentionState } from "@/lib/types";
@@ -81,11 +85,17 @@ export default function ProjectDetailPage() {
   const { items: emailAccounts, loading: emailLoading } = useEmailAccounts();
   const aiSubsQ = useAISubscriptions();
   const { items: invoices, loading: invoicesLoading } = useInvoices();
+  const effortLogsQ = useEffortLogs(projectId);
+  const { branding } = useBusinessBranding();
 
   const projects = projectsQ.data?.items ?? [];
   const aiSubs = aiSubsQ.data?.items ?? [];
+  const effortLogs = effortLogsQ.data?.items ?? [];
 
   const project = projects.find((p) => p.id === projectId);
+
+  const totalHours = effortLogs.reduce((sum, log) => sum + log.hours, 0);
+  const hourlyRate = branding?.defaultHourlyRate ?? null;
 
   const isLoading = projectsQ.isLoading || emailLoading || aiSubsQ.isLoading || invoicesLoading;
 
@@ -173,6 +183,15 @@ export default function ProjectDetailPage() {
               <User className="h-3.5 w-3.5" />
               <span data-testid="text-client-name">{project.clientName}</span>
             </div>
+            {project.projectAmount && hourlyRate && totalHours > 0 && (
+              <div className="mt-2">
+                <ProfitabilityDisplay
+                  projectAmount={project.projectAmount}
+                  totalHours={totalHours}
+                  hourlyRate={hourlyRate}
+                />
+              </div>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2 sm:shrink-0">
@@ -360,6 +379,8 @@ export default function ProjectDetailPage() {
               </CardContent>
             </Card>
           )}
+
+          <EffortLogSection projectId={project.id} />
 
           <ActionItemsSection context={{ type: "project", id: project.id }} />
 

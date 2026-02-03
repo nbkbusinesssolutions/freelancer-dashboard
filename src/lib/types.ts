@@ -163,4 +163,5 @@ export type BusinessBranding = {
   mobile?: string | null;
   address?: string | null;
   email?: string | null;
+  defaultHourlyRate?: number | null;
 };

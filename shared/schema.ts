@@ -133,9 +133,25 @@ export const businessBranding = pgTable("business_branding", {
   mobile: text("mobile"),
   address: text("address"),
   email: text("email"),
+  defaultHourlyRate: numeric("default_hourly_rate"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
+
+export const effortLogs = pgTable("effort_logs", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  date: date("date").notNull(),
+  hours: numeric("hours").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+}, (table) => ({
+  projectIdIdx: index("idx_effort_logs_project_id").on(table.projectId),
+}));
+
+export const effortLogsRelations = relations(effortLogs, ({ one }) => ({
+  project: one(projects, { fields: [effortLogs.projectId], references: [projects.id] }),
+}));
 
 export const clientsRelations = relations(clients, ({ many }) => ({
   projects: many(projects),

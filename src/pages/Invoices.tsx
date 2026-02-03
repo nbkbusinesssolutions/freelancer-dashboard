@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Plus, Eye, Pencil, Trash2, Printer, FileText } from "lucide-react";
+import { Plus, Eye, Pencil, Trash2, Printer, FileText, Send } from "lucide-react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useFieldArray } from "react-hook-form";
@@ -44,6 +44,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import InvoicePreview from "@/components/invoices/InvoicePreview";
+import SendReminderModal from "@/components/invoices/SendReminderModal";
+import { useBranding } from "@/hooks/useBranding";
 
 const PAYMENT_STATUSES: PaymentStatus[] = ["Unpaid", "Paid", "Partial", "Overdue"];
 
@@ -101,10 +103,12 @@ function statusVariant(status: PaymentStatus) {
 
 export default function InvoicesPage() {
   const { items, upsert, remove } = useInvoices();
+  const brandingQ = useBranding();
   const [search, setSearch] = React.useState("");
   const [open, setOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<InvoiceItem | null>(null);
   const [previewInvoice, setPreviewInvoice] = React.useState<InvoiceItem | null>(null);
+  const [reminderInvoice, setReminderInvoice] = React.useState<InvoiceItem | null>(null);
   const isMobile = useIsMobile();
 
   const filtered = items.filter((item) => {
@@ -307,6 +311,16 @@ export default function InvoicesPage() {
                         </div>
                       </div>
                       <div className="flex gap-1">
+                        {inv.paymentStatus !== "Paid" && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-amber-600"
+                            onClick={() => setReminderInvoice(inv)}
+                          >
+                            <Send className="h-4 w-4" />
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"
@@ -385,6 +399,17 @@ export default function InvoicesPage() {
                       </td>
                       <td className="py-3">
                         <div className="flex gap-1">
+                          {inv.paymentStatus !== "Paid" && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-amber-600 hover:text-amber-700"
+                              onClick={() => setReminderInvoice(inv)}
+                              title="Send Reminder"
+                            >
+                              <Send className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="icon"
@@ -773,6 +798,16 @@ export default function InvoicesPage() {
           invoice={previewInvoice}
           open={!!previewInvoice}
           onOpenChange={(o) => !o && setPreviewInvoice(null)}
+        />
+      )}
+
+      {/* Send Reminder Modal */}
+      {reminderInvoice && (
+        <SendReminderModal
+          invoice={reminderInvoice}
+          open={!!reminderInvoice}
+          onOpenChange={(o) => !o && setReminderInvoice(null)}
+          businessName={brandingQ.data?.businessName}
         />
       )}
     </main>

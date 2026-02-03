@@ -55,6 +55,7 @@ const brandingSchema = z.object({
   mobile: z.string().max(20).optional(),
   address: z.string().max(500).optional(),
   email: z.string().email().optional().or(z.literal("")),
+  defaultHourlyRate: z.coerce.number().min(0).optional(),
 });
 
 function exportAllData() {
@@ -106,6 +107,7 @@ export default function SettingsPage() {
       mobile: branding.mobile ?? "",
       address: branding.address ?? "",
       email: branding.email ?? "",
+      defaultHourlyRate: branding.defaultHourlyRate ?? 0,
     },
   });
 
@@ -119,6 +121,7 @@ export default function SettingsPage() {
       mobile: branding.mobile ?? "",
       address: branding.address ?? "",
       email: branding.email ?? "",
+      defaultHourlyRate: branding.defaultHourlyRate ?? 0,
     });
   }, [branding, form]);
 
@@ -183,6 +186,7 @@ export default function SettingsPage() {
       mobile: values.mobile || null,
       address: values.address || null,
       email: values.email || null,
+      defaultHourlyRate: values.defaultHourlyRate || null,
     });
     toast({ title: "Business branding updated" });
   }
@@ -262,6 +266,21 @@ export default function SettingsPage() {
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="defaultHourlyRate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Default Hourly Rate (for profitability)</FormLabel>
+                    <FormControl>
+                      <Input type="number" className="min-h-11 max-w-xs" placeholder="500" {...field} />
+                    </FormControl>
+                    <FormDescription>Your target hourly rate in INR. Used to calculate project profitability.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}

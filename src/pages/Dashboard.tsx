@@ -1,35 +1,40 @@
 import * as React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { formatISO, format, parseISO } from "date-fns";
-import { CheckCircle2, Circle, Calendar } from "lucide-react";
+import { CheckCircle2, Circle, Calendar, ChevronRight } from "lucide-react";
 
 import { useAISubscriptions, useProjects } from "@/hooks/useApiData";
-import { computeSubscriptionStatus, getDaysLeft } from "@/lib/subscriptionStatus";
-import { hasShownReminder, markReminderShown, type ReminderStage } from "@/hooks/useLocalReminderLog";
-import {
-  computeDateExpiry,
-  DEFAULT_REMINDER_THRESHOLDS,
-  matchReminderStage,
-  stageLabel as dateStageLabel,
-  stagePriority,
-  type DateReminderStage,
-} from "@/lib/dateExpiry";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useInvoices } from "@/hooks/useInvoices";
 import { useIncompleteActions } from "@/hooks/use-actions";
+import { useIsMobile } from "@/hooks/use-mobile";
+
+import {
+  computeAllUrgencyItems,
+  getTopUrgencyItem,
+  isAllClear,
+  getFinancialVitals,
+  type UrgencyItem,
+  type InvoiceForUrgency,
+  type ProjectForUrgency,
+  type AISubscriptionForUrgency,
+  type ActionItemForUrgency,
+} from "@/lib/urgencyScore";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import DashboardAttentionPanel from "@/components/dashboard/DashboardAttentionPanel";
-import DashboardKpiGrid, { type DashboardKpi } from "@/components/dashboard/DashboardKpiGrid";
-import FinancialSnapshot from "@/components/financial/FinancialSnapshot";
+
+import OneThingCard from "@/components/dashboard/OneThingCard";
+import AllClearCard from "@/components/dashboard/AllClearCard";
+import FinancialVitalsBar from "@/components/dashboard/FinancialVitalsBar";
 import { AttentionBadge } from "@/components/attention/AttentionStateSelector";
 
-function stageLabel(stage: ReminderStage) {
-  // Back-compat helper for AI reminder stages.
-  return dateStageLabel(stage as unknown as DateReminderStage);
+function getUrgencyBadgeVariant(score: number): "default" | "secondary" | "destructive" | "outline" {
+  if (score >= 1000) return "destructive";
+  if (score >= 500) return "secondary";
+  if (score >= 200) return "default";
+  return "outline";
 }
 
 export default function DashboardPage() {
@@ -37,10 +42,61 @@ export default function DashboardPage() {
   const isMobile = useIsMobile();
   const projectsQ = useProjects();
   const subsQ = useAISubscriptions();
+  const { items: invoiceItems } = useInvoices();
   const { actions: incompleteActions } = useIncompleteActions();
 
   const projects = projectsQ.data?.items ?? [];
   const subs = subsQ.data?.items ?? [];
+
+  const invoicesForUrgency: InvoiceForUrgency[] = invoiceItems.map((inv) => ({
+    id: inv.id,
+    invoiceNumber: inv.invoiceNumber,
+    clientName: inv.clientName,
+    grandTotal: inv.grandTotal,
+    balanceDue: inv.balanceDue,
+    paymentStatus: inv.paymentStatus,
+    dueDate: inv.dueDate,
+    invoiceDate: inv.invoiceDate,
+  }));
+
+  const projectsForUrgency: ProjectForUrgency[] = projects.map((p) => ({
+    id: p.id,
+    clientName: p.clientName,
+    projectName: p.projectName,
+    domainName: p.domainName,
+    domainRenewalDate: p.domainRenewalDate,
+    hostingRenewalDate: p.hostingRenewalDate,
+    pendingAmount: p.pendingAmount,
+    paymentStatus: p.paymentStatus,
+  }));
+
+  const subsForUrgency: AISubscriptionForUrgency[] = subs.map((s) => ({
+    id: s.id,
+    toolName: s.toolName,
+    cancelByDate: s.cancelByDate,
+    manualStatus: s.manualStatus,
+    cost: s.cost,
+  }));
+
+  const actionsForUrgency: ActionItemForUrgency[] = incompleteActions.map((a) => ({
+    id: a.id,
+    text: a.text,
+    dueDate: a.dueDate,
+    completed: a.completed,
+    context: a.context,
+  }));
+
+  const urgencyItems = React.useMemo(
+    () => computeAllUrgencyItems(invoicesForUrgency, projectsForUrgency, subsForUrgency, actionsForUrgency),
+    [invoicesForUrgency, projectsForUrgency, subsForUrgency, actionsForUrgency]
+  );
+
+  const topItem = getTopUrgencyItem(urgencyItems);
+  const allClear = isAllClear(urgencyItems);
+  const financialVitals = React.useMemo(
+    () => getFinancialVitals(invoicesForUrgency, subsForUrgency, projectsForUrgency),
+    [invoicesForUrgency, subsForUrgency, projectsForUrgency]
+  );
 
   const itemsNeedingAttention = [
     ...projects.filter((p) => p.attentionState && p.attentionState !== "stable").map((p) => ({
@@ -59,248 +115,60 @@ export default function DashboardPage() {
     })),
   ];
 
-  const computedSubs = subs
-    .map((s) => {
-      const status = computeSubscriptionStatus(s);
-      const daysLeft = s.cancelByDate ? getDaysLeft(s.cancelByDate) : null;
-      return { ...s, status, daysLeft };
-    })
-    .sort((a, b) => (a.daysLeft ?? 9999) - (b.daysLeft ?? 9999));
-
-  const expiringSoon = computedSubs.filter((s) => s.status === "Expiring Soon");
-  const expired = computedSubs.filter((s) => s.status === "Expired");
-
-  const upcoming7 = computedSubs
-    .filter((s) => s.daysLeft !== null && s.daysLeft <= 7)
-    .map((s) => ({
-      id: s.id,
-      toolName: s.toolName,
-      daysLeft: s.daysLeft as number,
-      status: s.status as "Active" | "Expiring Soon" | "Expired",
-    }));
-
-  const domainUpcoming30 = projects
-    .map((p) => {
-      const exp = computeDateExpiry(p.domainRenewalDate, 30);
-      if (!exp) return null;
-      if (exp.daysLeft > 30) return null;
-      return {
-        id: p.id,
-        toolName: `${p.clientName} — ${p.domainName}`,
-        daysLeft: exp.daysLeft,
-        status: exp.status,
-      } as const;
-    })
-    .filter(Boolean)
-    .sort((a, b) => (a!.daysLeft ?? 9999) - (b!.daysLeft ?? 9999)) as Array<{
-    id: string;
-    toolName: string;
-    daysLeft: number;
-    status: "Active" | "Expiring Soon" | "Expired";
-  }>;
-
-  const hostingUpcoming30 = projects
-    .map((p) => {
-      const exp = computeDateExpiry(p.hostingRenewalDate, 30);
-      if (!exp) return null;
-      if (exp.daysLeft > 30) return null;
-      return {
-        id: p.id,
-        toolName: `${p.clientName} — ${p.projectName}`,
-        daysLeft: exp.daysLeft,
-        status: exp.status,
-      } as const;
-    })
-    .filter(Boolean)
-    .sort((a, b) => (a!.daysLeft ?? 9999) - (b!.daysLeft ?? 9999)) as Array<{
-    id: string;
-    toolName: string;
-    daysLeft: number;
-    status: "Active" | "Expiring Soon" | "Expired";
-  }>;
-
-  // Local-only reminders (per-device) – shown once per stage per day.
-  const todayIso = formatISO(new Date(), { representation: "date" });
-  const reminderCandidates: Array<{
-    stage: DateReminderStage;
-    key: string;
-    title: string;
-    dateIso?: string;
-    onReview: () => void;
-  }> = [];
-
-  // AI
-  computedSubs.forEach((s) => {
-    if (!s.cancelByDate || s.manualStatus === "Cancelled") return;
-    if (s.daysLeft === null) return;
-    const stage = matchReminderStage(s.daysLeft, DEFAULT_REMINDER_THRESHOLDS);
-    if (!stage) return;
-    const key = `ai:${s.id}:${stage}`;
-    if (hasShownReminder(key, todayIso)) return;
-    reminderCandidates.push({
-      stage,
-      key,
-      title: `AI — ${s.toolName}`,
-      dateIso: s.cancelByDate ?? undefined,
-      onReview: () => navigate(`/ai-subscriptions?focus=${encodeURIComponent(s.id)}`),
-    });
-  });
-
-  // Projects: domain + hosting
-  projects.forEach((p) => {
-    const domain = p.domainRenewalDate ? getDaysLeft(p.domainRenewalDate) : null;
-    if (domain !== null) {
-      const stage = matchReminderStage(domain, DEFAULT_REMINDER_THRESHOLDS);
-      if (stage) {
-        const key = `domain:${p.id}:${stage}`;
-        if (!hasShownReminder(key, todayIso)) {
-          reminderCandidates.push({
-            stage,
-            key,
-            title: `Domain — ${p.clientName} • ${p.domainName}`,
-            dateIso: p.domainRenewalDate ?? undefined,
-            onReview: () => navigate(`/projects?renewal=domain`),
-          });
-        }
-      }
-    }
-
-    const hosting = p.hostingRenewalDate ? getDaysLeft(p.hostingRenewalDate) : null;
-    if (hosting !== null) {
-      const stage = matchReminderStage(hosting, DEFAULT_REMINDER_THRESHOLDS);
-      if (stage) {
-        const key = `hosting:${p.id}:${stage}`;
-        if (!hasShownReminder(key, todayIso)) {
-          reminderCandidates.push({
-            stage,
-            key,
-            title: `Hosting — ${p.clientName} • ${p.projectName}`,
-            dateIso: p.hostingRenewalDate ?? undefined,
-            onReview: () => navigate(`/projects?renewal=hosting`),
-          });
-        }
-      }
-    }
-  });
-
-  const reminderHit = reminderCandidates.sort((a, b) => stagePriority(a.stage) - stagePriority(b.stage))[0];
-
-  // Local notifications (no backend): only when app is open.
-  // We request permission only when we actually have a reminder to show.
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  React.useEffect(() => {
-    if (!reminderHit) return;
-    if (typeof window === "undefined" || !("Notification" in window)) return;
-
-    const show = () => {
-      try {
-        new Notification(`Reminder: ${dateStageLabel(reminderHit.stage)}`, {
-          body: reminderHit.title,
-        });
-      } catch {
-        // ignore
-      }
-    };
-
-    if (Notification.permission === "granted") {
-      show();
-      markReminderShown(reminderHit.key, todayIso);
-      return;
-    }
-
-    if (Notification.permission === "default") {
-      Notification.requestPermission().then((perm) => {
-        if (perm === "granted") {
-          show();
-          markReminderShown(reminderHit.key, todayIso);
-        }
-      });
-    }
-  }, [reminderHit, todayIso]);
-
-  const pendingPayments = projects
-    .filter((p) => {
-      const status = p.paymentStatus;
-      const pending = p.pendingAmount;
-      return (status === "Pending" || status === "Partial") && pending && pending > 0;
-    })
-    .map((p) => ({
-      id: p.id,
-      clientName: p.clientName,
-      projectName: p.projectName,
-      pendingAmount: p.pendingAmount!,
-      paymentStatus: p.paymentStatus as "Pending" | "Partial",
-    }))
-    .sort((a, b) => b.pendingAmount - a.pendingAmount);
-
-  const totalPending = pendingPayments.reduce((sum, p) => sum + p.pendingAmount, 0);
-
-  const kpis: DashboardKpi[] = [
-    {
-      title: "Total Projects",
-      value: projects.length,
-      actionLabel: "Open",
-      actionTo: "/projects",
-      sparkline: projects.map((p) => (p.status === "Ongoing" ? 1 : 0)).slice(-14),
-      tone: "primary",
-    },
-    {
-      title: "Ongoing Projects",
-      value: projects.filter((p) => p.status === "Ongoing").length,
-      actionLabel: "Filter",
-      actionTo: "/projects?status=Ongoing",
-      sparkline: projects.map((p) => (p.status === "Ongoing" ? 1 : 0)).slice(-14),
-      tone: "muted",
-    },
-    {
-      title: "Pending Payments",
-      value: `₹${totalPending.toLocaleString("en-IN")}`,
-      actionLabel: "Review",
-      actionTo: "/projects?payment=pending",
-      sparkline: pendingPayments.slice(0, 14).map((p) => Math.min(10, p.pendingAmount / 1000)),
-      tone: totalPending > 0 ? "destructive" : "muted",
-    },
-    {
-      title: "Expired Items",
-      value: expired.length,
-      actionLabel: "Review",
-      actionTo: "/ai-subscriptions?status=Expired",
-      sparkline: computedSubs
-        .filter((s) => s.daysLeft !== null)
-        .slice(0, 14)
-        .map((s) => ((s.daysLeft ?? 0) < 0 ? Math.min(14, Math.abs(s.daysLeft ?? 0)) : 0)),
-      tone: "destructive",
-    },
-  ];
-
   return (
-    <main className="space-y-5">
+    <main className="space-y-6">
       <header className="space-y-1">
-        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Operational view — fast scan, clear next actions.</p>
+        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">Command Center</h1>
+        <p className="text-sm text-muted-foreground">Your business, under control.</p>
       </header>
 
-      <DashboardAttentionPanel
-        reminder={
-          reminderHit
-            ? {
-                stageLabel: stageLabel(reminderHit.stage as unknown as ReminderStage),
-                toolName: reminderHit.title,
-                cancelByDate: reminderHit.dateIso,
-                onReview: () => {
-                  markReminderShown(reminderHit.key, todayIso);
-                  reminderHit.onReview();
-                },
-              }
-            : null
-        }
-        upcomingAi={upcoming7}
-        upcomingDomains={domainUpcoming30}
-        upcomingHosting={hostingUpcoming30}
-        pendingPayments={pendingPayments}
+      <FinancialVitalsBar
+        totalPendingPayments={financialVitals.totalPendingPayments}
+        revenueThisMonth={financialVitals.revenueThisMonth}
+        thirtyDayExpenseHorizon={financialVitals.thirtyDayExpenseHorizon}
       />
 
-      <DashboardKpiGrid items={kpis} />
+      {allClear ? (
+        <AllClearCard revenueThisMonth={financialVitals.revenueThisMonth} />
+      ) : topItem ? (
+        <OneThingCard item={topItem} />
+      ) : null}
+
+      {urgencyItems.length > 1 && !allClear && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Priority Queue</CardTitle>
+            <CardDescription>Next items requiring attention, sorted by urgency</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {urgencyItems.slice(1, 6).map((item) => (
+                <Link
+                  key={item.id}
+                  to={item.actionLink}
+                  className="flex items-center justify-between gap-3 rounded-md border p-3 hover:bg-muted/50 transition-colors"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-medium truncate">{item.title}</div>
+                    <div className="text-xs text-muted-foreground">{item.context}</div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge variant={getUrgencyBadgeVariant(item.urgencyScore)} className="text-xs">
+                      {item.urgencyScore.toLocaleString()}
+                    </Badge>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                </Link>
+              ))}
+              {urgencyItems.length > 6 && (
+                <div className="text-xs text-muted-foreground text-center pt-2">
+                  +{urgencyItems.length - 6} more items
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
@@ -312,7 +180,11 @@ export default function DashboardPage() {
             {isMobile ? (
               <div className="space-y-2">
                 {projects.slice(0, 6).map((p) => (
-                  <div key={p.id} className="rounded-md border p-3">
+                  <Link
+                    key={p.id}
+                    to={`/projects/${p.id}`}
+                    className="block rounded-md border p-3 hover:bg-muted/50 transition-colors"
+                  >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="nbk-break-anywhere text-xs text-muted-foreground">{p.clientName}</div>
@@ -322,7 +194,7 @@ export default function DashboardPage() {
                         {p.status}
                       </Badge>
                     </div>
-                  </div>
+                  </Link>
                 ))}
                 {projects.length === 0 && <div className="rounded-md border p-3 text-sm text-muted-foreground">No projects yet.</div>}
               </div>
@@ -337,7 +209,11 @@ export default function DashboardPage() {
                 </TableHeader>
                 <TableBody>
                   {projects.slice(0, 6).map((p) => (
-                    <TableRow key={p.id}>
+                    <TableRow
+                      key={p.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => navigate(`/projects/${p.id}`)}
+                    >
                       <TableCell className="font-medium">{p.clientName}</TableCell>
                       <TableCell>{p.projectName}</TableCell>
                       <TableCell>
@@ -364,80 +240,6 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Upcoming Expiries (Next 7 Days)</CardTitle>
-            <CardDescription>Personal tools only.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isMobile ? (
-              <div className="space-y-2">
-                {computedSubs
-                  .filter((s) => s.daysLeft !== null && s.daysLeft <= 7)
-                  .slice(0, 7)
-                  .map((s) => (
-                    <div key={s.id} className="rounded-md border p-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="nbk-break-anywhere font-medium">{s.toolName}</div>
-                          <div className="mt-1 text-xs text-muted-foreground">Days left: {s.daysLeft}</div>
-                        </div>
-                        <Badge variant={s.status === "Expired" ? "destructive" : s.status === "Expiring Soon" ? "secondary" : "outline"}>
-                          {s.status}
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
-                {computedSubs.filter((s) => s.daysLeft !== null && s.daysLeft <= 7).length === 0 && (
-                  <div className="rounded-md border p-3 text-sm text-muted-foreground">No upcoming expiries.</div>
-                )}
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Tool</TableHead>
-                    <TableHead>Days left</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {computedSubs
-                    .filter((s) => s.daysLeft !== null && s.daysLeft <= 7)
-                    .slice(0, 7)
-                    .map((s) => (
-                      <TableRow key={s.id}>
-                        <TableCell className="font-medium">{s.toolName}</TableCell>
-                        <TableCell>{s.daysLeft}</TableCell>
-                        <TableCell>
-                          <Badge variant={s.status === "Expired" ? "destructive" : s.status === "Expiring Soon" ? "secondary" : "outline"}>
-                            {s.status}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  {computedSubs.filter((s) => s.daysLeft !== null && s.daysLeft <= 7).length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={3} className="text-muted-foreground">
-                        No upcoming expiries.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            )}
-            <div className="mt-3">
-              <Button asChild variant="link" className="px-0">
-                <Link to="/ai-subscriptions">Open AI Subscriptions →</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
-
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <FinancialSnapshot />
 
         <Card>
           <CardHeader>
