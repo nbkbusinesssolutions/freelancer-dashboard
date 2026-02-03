@@ -1,7 +1,12 @@
 import { neon } from "@neondatabase/serverless";
 
 export function getDb() {
-  const sql = neon(process.env.DATABASE_URL!);
+  // Support both Netlify's Neon integration and manual DATABASE_URL
+  const connectionString = process.env.NETLIFY_DATABASE_URL || process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error("Database connection string not found. Set NETLIFY_DATABASE_URL or DATABASE_URL.");
+  }
+  const sql = neon(connectionString);
   return sql;
 }
 
