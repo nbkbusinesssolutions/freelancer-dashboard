@@ -16,7 +16,20 @@ export default async (request: Request, context: Context) => {
 
     if (request.method === "POST") {
       const body = await request.json();
-      const d = camelToSnake(body);
+      
+      // Handle clientName -> client_id lookup/creation
+      let clientId = body.clientId || null;
+      if (body.clientName && !clientId) {
+        const existingClient = await sql`SELECT id FROM clients WHERE name = ${body.clientName} LIMIT 1`;
+        if (existingClient.length > 0) {
+          clientId = existingClient[0].id;
+        } else {
+          const newClient = await sql`INSERT INTO clients (name) VALUES (${body.clientName}) RETURNING id`;
+          clientId = newClient[0].id;
+        }
+      }
+      
+      const d = camelToSnake({ ...body, clientId });
       
       if (body.id) {
         const rows = await sql`
