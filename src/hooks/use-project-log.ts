@@ -1,15 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
+import { api } from "@/lib/api";
 import type { ProjectLogEntry } from "@/lib/types";
-
-function dbToLogEntry(row: any): ProjectLogEntry {
-  return {
-    id: row.id,
-    projectId: row.project_id,
-    text: row.text,
-    createdAt: row.created_at,
-  };
-}
 
 export function useProjectLog(projectId: string) {
   const queryClient = useQueryClient();
@@ -17,30 +8,14 @@ export function useProjectLog(projectId: string) {
   const query = useQuery({
     queryKey: ["projectLogs", projectId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("project_logs")
-        .select("*")
-        .eq("project_id", projectId)
-        .order("created_at", { ascending: false });
-      
-      if (error) throw error;
-      return data.map(dbToLogEntry);
+      const data = await api.projectLogs.list(projectId);
+      return data as ProjectLogEntry[];
     },
   });
 
   const addEntry = useMutation({
     mutationFn: async (text: string) => {
-      const { data, error } = await supabase
-        .from("project_logs")
-        .insert({
-          project_id: projectId,
-          text,
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return dbToLogEntry(data);
+      return await api.projectLogs.add(projectId, text) as ProjectLogEntry;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projectLogs", projectId] });

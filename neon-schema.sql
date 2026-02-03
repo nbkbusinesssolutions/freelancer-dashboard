@@ -1,5 +1,5 @@
--- NBK Control Center Supabase Schema
--- Run this SQL in your Supabase SQL Editor to create all required tables
+-- NBK Control Center Neon Database Schema
+-- Run this SQL in your Neon SQL Editor to create all required tables
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -162,16 +162,3 @@ CREATE INDEX IF NOT EXISTS idx_effort_logs_project_id ON effort_logs(project_id)
 INSERT INTO business_branding (business_name, tagline)
 SELECT 'NBK Business Solutions', 'Professional Web Development & Design'
 WHERE NOT EXISTS (SELECT 1 FROM business_branding);
-
--- Disable Row Level Security for internal tool (single-user)
--- This allows anonymous access via the anon key
-ALTER TABLE clients DISABLE ROW LEVEL SECURITY;
-ALTER TABLE email_accounts DISABLE ROW LEVEL SECURITY;
-ALTER TABLE projects DISABLE ROW LEVEL SECURITY;
-ALTER TABLE invoices DISABLE ROW LEVEL SECURITY;
-ALTER TABLE invoice_items DISABLE ROW LEVEL SECURITY;
-ALTER TABLE ai_subscriptions DISABLE ROW LEVEL SECURITY;
-ALTER TABLE action_items DISABLE ROW LEVEL SECURITY;
-ALTER TABLE project_logs DISABLE ROW LEVEL SECURITY;
-ALTER TABLE business_branding DISABLE ROW LEVEL SECURITY;
-ALTER TABLE effort_logs DISABLE ROW LEVEL SECURITY;
