@@ -52,3 +52,5 @@ externalPort = 80
 
 [userenv.shared]
 PORT = "3000"
+VITE_SUPABASE_URL = "https://agbnlsfavebcbnecazah.supabase.co"
+VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnYm5sc2ZhdmViY2JuZWNhemFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxMDY4MzAsImV4cCI6MjA4NTY4MjgzMH0.KyK3KsKHAQBiI7ZDTAhZMnGnUw2JXAcyVKOsjO77ar8"
