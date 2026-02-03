@@ -6,7 +6,7 @@ Internal control center for NBK Business Solutions - manage projects, domain ren
 ## Technology Stack
 - **Frontend**: React 18 with Vite, TailwindCSS, Radix UI components
 - **Database**: Supabase (PostgreSQL)
-- **Deployment**: Netlify (static site)
+- **Deployment**: Vercel (static site)
 - **PWA**: Enabled via vite-plugin-pwa
 
 ## v2.0 Intelligence Features
@@ -39,15 +39,15 @@ VITE_SUPABASE_URL=https://your-project-id.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key-here
 ```
 
-**For Netlify Deployment:**
-Add these as environment variables in Netlify:
+**For Vercel Deployment:**
+Add these as environment variables in Vercel:
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 
-### 4. Deploy to Netlify
+### 4. Deploy to Vercel
 1. Push code to GitHub
-2. Connect repository to Netlify
-3. Add environment variables in Netlify dashboard
+2. Go to [vercel.com](https://vercel.com) and import your repository
+3. Add environment variables in Vercel dashboard
 4. Deploy!
 
 ## Project Structure
