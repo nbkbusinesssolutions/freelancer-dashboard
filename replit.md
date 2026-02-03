@@ -1,12 +1,12 @@
 # NBK Control Center v2.0
 
 ## Overview
-Internal control center for NBK Business Solutions - manage projects, domain renewals, AI subscriptions, invoices, and email accounts. v2.0 transforms the app from a passive data viewer into an active "Co-Pilot" with intelligent priority scoring and proactive business insights.
+Internal control center for NBK Business Solutions - manage projects, domain renewals, AI subscriptions, invoices, and email accounts. Now powered by **Supabase** for cloud database sync across all devices.
 
 ## Technology Stack
 - **Frontend**: React 18 with Vite, TailwindCSS, Radix UI components
-- **Backend**: Express.js with Drizzle ORM
-- **Database**: PostgreSQL (Neon)
+- **Database**: Supabase (PostgreSQL)
+- **Deployment**: Netlify (static site)
 - **PWA**: Enabled via vite-plugin-pwa
 
 ## v2.0 Intelligence Features
@@ -16,52 +16,66 @@ Internal control center for NBK Business Solutions - manage projects, domain ren
 - **Invoice Reminders**: "Send Reminder" feature with customizable email templates
 - **AI Spend Summary**: Total monthly spend tracking with "View by Cost" sorting
 
+## Setup Instructions
+
+### 1. Create Supabase Project
+1. Go to [supabase.com](https://supabase.com) and create a free account
+2. Create a new project
+3. Go to **Settings** → **API** and copy:
+   - Project URL (e.g., `https://xxxxx.supabase.co`)
+   - `anon` public key
+
+### 2. Create Database Tables
+1. In your Supabase dashboard, go to **SQL Editor**
+2. Copy the contents of `supabase-schema.sql` from this project
+3. Run the SQL to create all tables
+
+### 3. Configure Environment Variables
+
+**For Local Development:**
+Create a `.env` file:
+```
+VITE_SUPABASE_URL=https://your-project-id.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
+```
+
+**For Netlify Deployment:**
+Add these as environment variables in Netlify:
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+
+### 4. Deploy to Netlify
+1. Push code to GitHub
+2. Connect repository to Netlify
+3. Add environment variables in Netlify dashboard
+4. Deploy!
+
 ## Project Structure
 ```
 src/                    # React frontend
   components/           # UI components
-    dashboard/          # Command Center components (OneThingCard, FinancialVitals, AllClearCard)
+    dashboard/          # Command Center components
     effort-log/         # Effort logging components
     project/            # Profitability display
     invoices/           # Invoice reminder modal
     ai-subscriptions/   # AI spend summary
-  hooks/                # Custom React hooks
-  lib/                  # Utilities and API client
+  hooks/                # React hooks (Supabase integration)
+  lib/                  # Utilities
+    supabase.ts         # Supabase client
     urgencyScore.ts     # Urgency calculation system
   pages/                # Page components
-server/                 # Express backend
-  db.ts                 # Database connection
-  index.ts              # Server entry point
-  routes.ts             # API routes
-shared/                 # Shared code
-  schema.ts             # Drizzle schema definitions
 public/                 # Static assets
+supabase-schema.sql     # Database schema (run in Supabase SQL Editor)
 ```
 
 ## Scripts
-- `npm run dev` - Start development server (frontend + backend)
+- `npm run dev` - Start development server
 - `npm run build` - Build for production
-- `npm run db:push` - Push database schema changes
 
-## API Endpoints
-All API routes are prefixed with `/api`:
-- `/api/clients` - Clients CRUD
-- `/api/projects` - Projects CRUD
-- `/api/invoices` - Invoices with line items CRUD
-- `/api/email-accounts` - Email accounts CRUD
-- `/api/ai-subscriptions` - AI subscriptions CRUD
-- `/api/actions` - Action items CRUD
-- `/api/project-logs` - Project logs CRUD
-- `/api/branding` - Business branding GET/PUT (includes defaultHourlyRate)
-- `/api/effort-logs` - Effort time tracking CRUD
-
-## Database Schema
+## Database Schema (Supabase)
 Tables: clients, email_accounts, projects, invoices, invoice_items, ai_subscriptions, action_items, project_logs, business_branding, effort_logs
 
 ## Recent Changes
+- 2026-02-03: Migrated from Replit PostgreSQL to Supabase for cloud sync
 - 2026-02-03: v2.0 Upgrade - Intelligence Layer with urgency scoring, Command Center, effort tracking, profitability
-- 2026-02-03: Added AI Spend Summary and "View by Cost" sorting to AI Subscriptions
-- 2026-02-03: Added "Send Reminder" feature for invoices with email templates
-- 2026-02-03: Added effort logging and default hourly rate for profitability calculations
-- 2026-01-29: Migrated from Supabase to Replit PostgreSQL with Drizzle ORM
-- 2026-01-29: Converted Netlify serverless functions to Express routes
+- 2026-02-03: Removed Express backend - now pure frontend with Supabase direct connection

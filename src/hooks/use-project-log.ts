@@ -1,19 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 import type { ProjectLogEntry } from "@/lib/types";
 
-const STORAGE_KEY = "nbk.projectLogs";
-
-function getLogs(): ProjectLogEntry[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveLogs(items: ProjectLogEntry[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+function dbToLogEntry(row: any): ProjectLogEntry {
+  return {
+    id: row.id,
+    projectId: row.project_id,
+    text: row.text,
+    createdAt: row.created_at,
+  };
 }
 
 export function useProjectLog(projectId: string) {
@@ -21,26 +16,31 @@ export function useProjectLog(projectId: string) {
 
   const query = useQuery({
     queryKey: ["projectLogs", projectId],
-    queryFn: () => {
-      const all = getLogs();
-      return all
-        .filter((log) => log.projectId === projectId)
-        .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("project_logs")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      return data.map(dbToLogEntry);
     },
   });
 
   const addEntry = useMutation({
     mutationFn: async (text: string) => {
-      const items = getLogs();
-      const newEntry: ProjectLogEntry = {
-        id: crypto.randomUUID(),
-        projectId,
-        text,
-        createdAt: new Date().toISOString(),
-      };
-      items.push(newEntry);
-      saveLogs(items);
-      return newEntry;
+      const { data, error } = await supabase
+        .from("project_logs")
+        .insert({
+          project_id: projectId,
+          text,
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return dbToLogEntry(data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projectLogs", projectId] });

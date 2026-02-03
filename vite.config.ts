@@ -3,7 +3,6 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { VitePWA } from "vite-plugin-pwa";
 
-// https://vitejs.dev/config/
 export default defineConfig(() => ({
   server: {
     host: "0.0.0.0",
@@ -11,12 +10,6 @@ export default defineConfig(() => ({
     allowedHosts: true as const,
     hmr: {
       overlay: false,
-    },
-    proxy: {
-      "/api": {
-        target: "http://localhost:3001",
-        changeOrigin: true,
-      },
     },
   },
   plugins: [

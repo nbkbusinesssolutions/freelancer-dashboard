@@ -1,132 +1,142 @@
-import * as React from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 import type { EmailAccountItem } from "@/lib/types";
 
-const STORAGE_KEY = "nbk.emailAccounts";
-const OLD_VAULT_KEY = "mockApiDb:v1";
-
-function migrateFromAccountVault(): EmailAccountItem[] {
-  try {
-    const oldData = localStorage.getItem(OLD_VAULT_KEY);
-    if (!oldData) return [];
-    
-    const parsed = JSON.parse(oldData);
-    if (!parsed?.accountVault?.length) return [];
-    
-    const migrated: EmailAccountItem[] = parsed.accountVault.map((old: any) => ({
-      id: old.id,
-      email: old.email,
-      provider: old.platform === "Gmail" ? "Gmail" : 
-               old.platform === "Outlook" ? "Outlook" : "Custom",
-      password: null,
-      recoveryEmail: null,
-      phone: null,
-      notes: old.notes || null,
-      status: old.isActive ? "Active" : "Not in use",
-      tags: old.platform ? [old.platform] : null,
-    }));
-    
-    return migrated;
-  } catch {
-    return [];
+function snakeToCamel(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+  if (Array.isArray(obj)) return obj.map(snakeToCamel);
+  if (typeof obj !== "object") return obj;
+  
+  const converted: any = {};
+  for (const key in obj) {
+    const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+    converted[camelKey] = snakeToCamel(obj[key]);
   }
+  return converted;
 }
 
-function loadItems(): EmailAccountItem[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      return JSON.parse(raw) as EmailAccountItem[];
-    }
-    
-    const migrated = migrateFromAccountVault();
-    if (migrated.length > 0) {
-      saveItems(migrated);
-      return migrated;
-    }
-    
-    return [];
-  } catch {
-    return [];
+function camelToSnake(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+  if (Array.isArray(obj)) return obj.map(camelToSnake);
+  if (typeof obj !== "object") return obj;
+  
+  const converted: any = {};
+  for (const key in obj) {
+    const snakeKey = key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+    converted[snakeKey] = camelToSnake(obj[key]);
   }
-}
-
-function saveItems(items: EmailAccountItem[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  return converted;
 }
 
 export function useEmailAccounts() {
-  const [items, setItems] = React.useState<EmailAccountItem[]>(() => loadItems());
-  const [loading, setLoading] = React.useState(false);
+  const queryClient = useQueryClient();
 
-  const refresh = React.useCallback(() => {
-    setItems(loadItems());
-  }, []);
+  const query = useQuery({
+    queryKey: ["email-accounts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("email_accounts")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data.map(snakeToCamel) as EmailAccountItem[];
+    },
+  });
 
-  const upsert = React.useCallback((item: Omit<EmailAccountItem, "id"> & { id?: string }) => {
-    const current = loadItems();
-    const id = item.id || crypto.randomUUID();
-    const existing = current.findIndex((i) => i.id === id);
-    const newItem: EmailAccountItem = { ...item, id };
-
-    if (existing >= 0) {
-      current[existing] = newItem;
-    } else {
-      current.unshift(newItem);
-    }
-
-    saveItems(current);
-    setItems(current);
-    return newItem;
-  }, []);
-
-  const bulkAdd = React.useCallback((emails: string[], provider: EmailAccountItem["provider"], tags?: string[]) => {
-    const current = loadItems();
-    const existingEmails = new Set(current.map(i => i.email.toLowerCase()));
-    
-    const added: EmailAccountItem[] = [];
-    const skipped: string[] = [];
-    
-    for (const email of emails) {
-      const trimmed = email.trim().toLowerCase();
-      if (!trimmed) continue;
+  const upsertMutation = useMutation({
+    mutationFn: async (item: Omit<EmailAccountItem, "id"> & { id?: string }) => {
+      const snakePayload = camelToSnake(item);
+      delete snakePayload.created_at;
       
-      if (existingEmails.has(trimmed)) {
-        skipped.push(email);
-        continue;
+      if (item.id) {
+        const { data, error } = await supabase
+          .from("email_accounts")
+          .update(snakePayload)
+          .eq("id", item.id)
+          .select()
+          .single();
+        if (error) throw error;
+        return snakeToCamel(data) as EmailAccountItem;
+      } else {
+        delete snakePayload.id;
+        const { data, error } = await supabase
+          .from("email_accounts")
+          .insert(snakePayload)
+          .select()
+          .single();
+        if (error) throw error;
+        return snakeToCamel(data) as EmailAccountItem;
+      }
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["email-accounts"] }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("email_accounts").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["email-accounts"] }),
+  });
+
+  const bulkAddMutation = useMutation({
+    mutationFn: async ({ emails, provider, tags }: { emails: string[]; provider: EmailAccountItem["provider"]; tags?: string[] }) => {
+      const { data: existing } = await supabase.from("email_accounts").select("email");
+      const existingEmails = new Set((existing || []).map((e: any) => e.email.toLowerCase()));
+      
+      const added: EmailAccountItem[] = [];
+      const skipped: string[] = [];
+      
+      for (const email of emails) {
+        const trimmed = email.trim().toLowerCase();
+        if (!trimmed || existingEmails.has(trimmed)) {
+          skipped.push(email);
+          continue;
+        }
+        
+        const { data, error } = await supabase
+          .from("email_accounts")
+          .insert({
+            email: email.trim(),
+            provider,
+            password: "",
+            status: "Active",
+            tags: tags?.length ? tags : null,
+          })
+          .select()
+          .single();
+        
+        if (!error && data) {
+          added.push(snakeToCamel(data) as EmailAccountItem);
+          existingEmails.add(trimmed);
+        }
       }
       
-      const newItem: EmailAccountItem = {
-        id: crypto.randomUUID(),
-        email: email.trim(),
-        provider,
-        password: null,
-        recoveryEmail: null,
-        phone: null,
-        notes: null,
-        status: "Active",
-        tags: tags?.length ? tags : null,
-      };
-      
-      current.unshift(newItem);
-      existingEmails.add(trimmed);
-      added.push(newItem);
-    }
-    
-    saveItems(current);
-    setItems(current);
-    
-    return { added, skipped };
-  }, []);
+      return { added, skipped };
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["email-accounts"] }),
+  });
 
-  const remove = React.useCallback((id: string) => {
-    const current = loadItems().filter((i) => i.id !== id);
-    saveItems(current);
-    setItems(current);
-  }, []);
+  const items = query.data ?? [];
+  const loading = query.isLoading;
 
-  const getById = React.useCallback((id: string): EmailAccountItem | undefined => {
-    return items.find(i => i.id === id);
-  }, [items]);
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ["email-accounts"] });
+
+  const upsert = (item: Omit<EmailAccountItem, "id"> & { id?: string }) => {
+    return upsertMutation.mutateAsync(item);
+  };
+
+  const bulkAdd = (emails: string[], provider: EmailAccountItem["provider"], tags?: string[]) => {
+    return bulkAddMutation.mutateAsync({ emails, provider, tags });
+  };
+
+  const remove = (id: string) => {
+    return deleteMutation.mutateAsync(id);
+  };
+
+  const getById = (id: string): EmailAccountItem | undefined => {
+    return items.find((i) => i.id === id);
+  };
 
   return { items, loading, refresh, upsert, bulkAdd, remove, getById };
 }

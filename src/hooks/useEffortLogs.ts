@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 
 export interface EffortLog {
   id: string;
@@ -9,46 +10,56 @@ export interface EffortLog {
   createdAt: string;
 }
 
-async function fetchEffortLogs(projectId?: string): Promise<{ items: EffortLog[] }> {
-  const url = projectId ? `/api/effort-logs?projectId=${projectId}` : "/api/effort-logs";
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("Failed to fetch effort logs");
-  return res.json();
-}
-
-async function createEffortLog(data: { projectId: string; date: string; hours: number; notes?: string }): Promise<EffortLog> {
-  const res = await fetch("/api/effort-logs", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error("Failed to create effort log");
-  return res.json();
-}
-
-async function deleteEffortLog(id: string): Promise<void> {
-  const res = await fetch(`/api/effort-logs?id=${id}`, { method: "DELETE" });
-  if (!res.ok) throw new Error("Failed to delete effort log");
+function dbToEffortLog(row: any): EffortLog {
+  return {
+    id: row.id,
+    projectId: row.project_id,
+    date: row.date,
+    hours: Number(row.hours),
+    notes: row.notes,
+    createdAt: row.created_at,
+  };
 }
 
 export function useEffortLogs(projectId?: string) {
   return useQuery({
     queryKey: ["effort-logs", projectId],
-    queryFn: () => fetchEffortLogs(projectId),
+    queryFn: async () => {
+      let q = supabase.from("effort_logs").select("*");
+      
+      if (projectId) {
+        q = q.eq("project_id", projectId);
+      }
+      
+      const { data, error } = await q.order("date", { ascending: false });
+      if (error) throw error;
+      return { items: data.map(dbToEffortLog) };
+    },
   });
 }
 
 export function useAllEffortLogs() {
-  return useQuery({
-    queryKey: ["effort-logs"],
-    queryFn: () => fetchEffortLogs(),
-  });
+  return useEffortLogs();
 }
 
 export function useCreateEffortLog() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: createEffortLog,
+    mutationFn: async (data: { projectId: string; date: string; hours: number; notes?: string }) => {
+      const { data: result, error } = await supabase
+        .from("effort_logs")
+        .insert({
+          project_id: data.projectId,
+          date: data.date,
+          hours: data.hours,
+          notes: data.notes || null,
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return dbToEffortLog(result);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["effort-logs"] });
     },
@@ -58,7 +69,10 @@ export function useCreateEffortLog() {
 export function useDeleteEffortLog() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: deleteEffortLog,
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("effort_logs").delete().eq("id", id);
+      if (error) throw error;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["effort-logs"] });
     },
